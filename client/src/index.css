@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #F0EEE7;
+  color: #1B1F22;
+  font-family: 'Barlow', sans-serif;
+}
+
+.font-display { font-family: 'Barlow Condensed', sans-serif; }
+
+.hazard-strip {
+  background: repeating-linear-gradient(135deg, #B3261E, #B3261E 10px, #D98E27 10px, #D98E27 20px);
+}
+
+:focus-visible { outline: 2px solid #B3261E; outline-offset: 2px; }

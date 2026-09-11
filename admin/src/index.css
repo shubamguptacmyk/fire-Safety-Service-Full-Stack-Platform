@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { background-color: #F0EEE7; color: #1B1F22; font-family: 'Barlow', sans-serif; }
+.font-display { font-family: 'Barlow Condensed', sans-serif; }
+:focus-visible { outline: 2px solid #B3261E; outline-offset: 2px; }

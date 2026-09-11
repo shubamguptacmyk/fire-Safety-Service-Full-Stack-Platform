@@ -1,0 +1,10 @@
+{
+  "nav": { "shop": "Shop", "amc": "AMC Plans", "bookService": "Book Service", "blog": "Blog", "myEquipment": "My Equipment", "login": "Login", "cart": "Cart" },
+  "home": {
+    "heroTitle": "Fire safety equipment, installed and kept ready — on a schedule, not a hope.",
+    "heroSubtitle": "Extinguishers, hydrant systems and suppression units, backed by AMC contracts and automatic refill reminders so nothing lapses without you knowing.",
+    "browseProducts": "Browse Products",
+    "requestQuote": "Request Bulk Quote"
+  },
+  "auth": { "login": "Log In", "register": "Create Account", "email": "Email", "phone": "Phone Number", "password": "Password" }
+}
