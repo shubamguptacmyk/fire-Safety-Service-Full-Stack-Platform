@@ -6,6 +6,7 @@ import { categoryService } from "@/services/categoryService";
 import { ProductQueryParams } from "@/types";
 import ProductCard from "@/components/ProductCard";
 import ProductFilters from "@/components/ProductFilters";
+import PromoBanner from "@/components/PromoBanner";
 import Seo from "@/components/Seo";
 import { SlidersHorizontal, PackageOpen, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
@@ -149,6 +150,9 @@ export default function Products() {
           )}
         </div>
       </section>
+
+      {/* Optional Admin-controlled Category Banner */}
+      <PromoBanner position="category_top" className="!py-4" />
 
       {/* Main Catalog Section */}
       <section className="max-w-6xl mx-auto px-4 py-8">

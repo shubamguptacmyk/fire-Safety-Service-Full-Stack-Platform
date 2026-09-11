@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Seo from "@/components/Seo";
+import AccountNav from "@/components/AccountNav";
 import { MapPin, Plus, Trash2, Home, Building2, Check, X } from "lucide-react";
 
 export default function Addresses() {
@@ -90,55 +91,61 @@ export default function Addresses() {
       </div>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid sm:grid-cols-2 gap-6">
-          {addresses.map((addr) => (
-            <div
-              key={addr.id}
-              className={`bg-white border rounded-xl p-5 shadow-sm space-y-3 relative ${
-                addr.isDefault ? "border-brand ring-1 ring-brand/20" : "border-black/10"
-              }`}
-            >
-              <div className="flex items-center justify-between pb-2 border-b border-black/10">
-                <span className="font-bold text-sm text-ink flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-brand" /> {addr.label}
-                </span>
-                {addr.isDefault && (
-                  <span className="text-[10px] bg-brand text-white font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                    Default
-                  </span>
-                )}
-              </div>
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <AccountNav />
 
-              <div className="text-xs text-steel leading-relaxed space-y-0.5">
-                <p className="text-ink font-medium">{addr.line1}</p>
-                {addr.line2 && <p>{addr.line2}</p>}
-                <p>
-                  {addr.city}, {addr.state} - <strong className="text-ink font-mono">{addr.pincode}</strong>
-                </p>
-              </div>
-
-              <div className="pt-2 flex items-center justify-between border-t border-black/5 text-xs">
-                {!addr.isDefault ? (
-                  <button
-                    onClick={() => handleSetDefault(addr.id)}
-                    className="text-brand font-semibold hover:underline"
-                  >
-                    Set as Default
-                  </button>
-                ) : (
-                  <span className="text-green-700 font-semibold flex items-center gap-1 text-[11px]">
-                    <Check className="w-3.5 h-3.5" /> Active for Deliveries
-                  </span>
-                )}
-                <button
-                  onClick={() => handleDelete(addr.id)}
-                  className="text-steel hover:text-red-600 p-1"
+          <div className="flex-1 min-w-0 w-full">
+            <div className="grid sm:grid-cols-2 gap-6">
+              {addresses.map((addr) => (
+                <div
+                  key={addr.id}
+                  className={`bg-white border rounded-xl p-5 shadow-sm space-y-3 relative ${
+                    addr.isDefault ? "border-brand ring-1 ring-brand/20" : "border-black/10"
+                  }`}
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
+                  <div className="flex items-center justify-between pb-2 border-b border-black/10">
+                    <span className="font-bold text-sm text-ink flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-brand" /> {addr.label}
+                    </span>
+                    {addr.isDefault && (
+                      <span className="text-[10px] bg-brand text-white font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                        Default
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="text-xs text-steel leading-relaxed space-y-0.5">
+                    <p className="text-ink font-medium">{addr.line1}</p>
+                    {addr.line2 && <p>{addr.line2}</p>}
+                    <p>
+                      {addr.city}, {addr.state} - <strong className="text-ink font-mono">{addr.pincode}</strong>
+                    </p>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-between border-t border-black/5 text-xs">
+                    {!addr.isDefault ? (
+                      <button
+                        onClick={() => handleSetDefault(addr.id)}
+                        className="text-brand font-semibold hover:underline"
+                      >
+                        Set as Default
+                      </button>
+                    ) : (
+                      <span className="text-green-700 font-semibold flex items-center gap-1 text-[11px]">
+                        <Check className="w-3.5 h-3.5" /> Active for Deliveries
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleDelete(addr.id)}
+                      className="text-steel hover:text-red-600 p-1"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </main>
 

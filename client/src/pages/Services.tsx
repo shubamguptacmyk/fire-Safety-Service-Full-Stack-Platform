@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Seo from "@/components/Seo";
+import PromoBanner from "@/components/PromoBanner";
 import {
   Wrench,
   ShieldCheck,
@@ -78,7 +79,10 @@ export default function Services() {
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-12 space-y-12">
+      {/* Optional Admin-controlled Services Banner */}
+      <PromoBanner position="services_top" className="!py-4" />
+
+      <main className="max-w-6xl mx-auto px-4 py-8 space-y-12">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((s, idx) => (
             <div
@@ -132,10 +136,10 @@ export default function Services() {
               Book Technician Online
             </Link>
             <a
-              href="tel:+919999999999"
+              href="tel:+919800000000"
               className="px-6 py-3 bg-brand hover:bg-brand-dark text-white font-bold text-xs rounded-lg flex items-center gap-2 shadow-sm"
             >
-              <PhoneCall className="w-4 h-4" /> Call Helpline: +91 99999 99999
+              <PhoneCall className="w-4 h-4" /> Call Helpline: +91 98000 00000
             </a>
           </div>
         </div>

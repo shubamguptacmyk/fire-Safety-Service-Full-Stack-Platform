@@ -19,57 +19,7 @@ import {
 } from "lucide-react";
 import { equipmentService, EquipmentItem, EquipmentStats } from "@/services/equipmentService";
 import { useAuthStore } from "@/store/authStore";
-
-const DEFAULT_EQUIPMENT: EquipmentItem[] = [
-  {
-    _id: "demo-1",
-    equipmentId: "EQ-2023-4912",
-    name: "SafePro 4kg ABC Fire Extinguisher",
-    serialNumber: "SN-2023-ABC-4912",
-    equipmentType: "ABC Dry Powder",
-    capacity: "4kg",
-    location: "Main Reception & Server Lobby (Floor 1)",
-    installationDate: "2023-08-15",
-    lastInspectionDate: "2024-02-10",
-    lastRefillDate: "2023-08-15",
-    nextInspectionDate: "2024-08-10",
-    nextRefillDate: "2024-08-15",
-    status: "Refill Due Soon",
-    notes: "Hydrostatic pressure test required prior to gas recharge.",
-  },
-  {
-    _id: "demo-2",
-    equipmentId: "EQ-2024-1049",
-    name: "FireShield 4.5kg CO2 Extinguisher",
-    serialNumber: "SN-2024-CO2-1049",
-    equipmentType: "CO2",
-    capacity: "4.5kg",
-    location: "Server & UPS Battery Room (Floor 2)",
-    installationDate: "2024-01-20",
-    lastInspectionDate: "2024-06-15",
-    lastRefillDate: "2024-01-20",
-    nextInspectionDate: "2025-06-15",
-    nextRefillDate: "2026-01-20",
-    status: "Healthy",
-    notes: "Pressure gauge verified in operating green band.",
-  },
-  {
-    _id: "demo-3",
-    equipmentId: "EQ-2022-8819",
-    name: "SafePro 9L Foam (AFFF) Extinguisher",
-    serialNumber: "SN-2022-AFFF-8819",
-    equipmentType: "Mechanical Foam (AFFF)",
-    capacity: "9L",
-    location: "Basement DG Set & Diesel Tank Area",
-    installationDate: "2022-04-10",
-    lastInspectionDate: "2023-04-10",
-    lastRefillDate: "2022-04-10",
-    nextInspectionDate: "2023-10-10",
-    nextRefillDate: "2023-04-10",
-    status: "Overdue",
-    notes: "Immediate refill and inspection required per municipal norms.",
-  },
-];
+import AccountNav from "@/components/AccountNav";
 
 export default function MyEquipment() {
   const navigate = useNavigate();
@@ -78,11 +28,11 @@ export default function MyEquipment() {
 
   const [equipmentList, setEquipmentList] = useState<EquipmentItem[]>([]);
   const [stats, setStats] = useState<EquipmentStats>({
-    total: 3,
-    healthy: 1,
+    total: 0,
+    healthy: 0,
     inspectionDueSoon: 0,
-    refillDueSoon: 1,
-    overdue: 1,
+    refillDueSoon: 0,
+    overdue: 0,
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -115,12 +65,10 @@ export default function MyEquipment() {
       // Offline / guest mode fallback
       try {
         const saved = JSON.parse(localStorage.getItem("ak_registered_equipment") || "[]");
-        const list = saved.length > 0 ? saved : DEFAULT_EQUIPMENT;
-        setEquipmentList(list);
-        computeLocalStats(list);
+        setEquipmentList(saved);
+        computeLocalStats(saved);
       } catch {
-        setEquipmentList(DEFAULT_EQUIPMENT);
-        computeLocalStats(DEFAULT_EQUIPMENT);
+        setEquipmentList([]);
       }
       setLoading(false);
       return;
@@ -128,19 +76,17 @@ export default function MyEquipment() {
 
     try {
       const res = await equipmentService.getMyEquipment();
-      if (res.items.length === 0) {
-        // First-time registered user: show default seed demo or let them create
-        setEquipmentList(DEFAULT_EQUIPMENT);
-        computeLocalStats(DEFAULT_EQUIPMENT);
-      } else {
-        setEquipmentList(res.items);
-        setStats(res.stats);
-      }
+      setEquipmentList(res.items || []);
+      setStats(res.stats || { total: 0, healthy: 0, inspectionDueSoon: 0, refillDueSoon: 0, overdue: 0 });
     } catch (err: any) {
       console.error("Failed to fetch equipment:", err);
-      setError("Unable to sync live inventory from server. Showing local records.");
-      const saved = JSON.parse(localStorage.getItem("ak_registered_equipment") || "[]");
-      setEquipmentList(saved.length > 0 ? saved : DEFAULT_EQUIPMENT);
+      try {
+        const saved = JSON.parse(localStorage.getItem("ak_registered_equipment") || "[]");
+        setEquipmentList(saved);
+        computeLocalStats(saved);
+      } catch {
+        setEquipmentList([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -280,12 +226,16 @@ export default function MyEquipment() {
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {error && (
-          <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs">
-            {error}
-          </div>
-        )}
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <AccountNav />
+
+          <div className="flex-1 min-w-0 w-full space-y-6">
+            {error && (
+              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs">
+                {error}
+              </div>
+            )}
 
         {/* Compliance Summary Metric Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -508,6 +458,8 @@ export default function MyEquipment() {
             })}
           </div>
         )}
+          </div>
+        </div>
       </main>
 
       {/* Register Modal */}

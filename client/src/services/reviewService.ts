@@ -49,6 +49,14 @@ export const reviewService = {
     return res.data.data;
   },
 
+  async getRecentApprovedReviews(limit: number = 6): Promise<ReviewItem[]> {
+    const res = await apiClient.get<{ success: boolean; data: ReviewItem[] }>(
+      "/reviews/recent",
+      { params: { limit } }
+    );
+    return res.data.data || [];
+  },
+
   async createReview(payload: CreateReviewPayload): Promise<ReviewItem> {
     const res = await apiClient.post<{ success: boolean; data: ReviewItem }>(
       "/reviews",

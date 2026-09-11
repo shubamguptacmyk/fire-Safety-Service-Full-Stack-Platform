@@ -112,7 +112,7 @@ export default function OrderSuccess() {
         {/* Support note */}
         <div className="mt-10 p-4 bg-paper rounded-lg border border-black/10 flex items-center justify-center gap-2 text-xs text-steel">
           <PhoneCall className="w-4 h-4 text-brand shrink-0" />
-          <span>Need immediate dispatch assistance? Contact our Navi Mumbai dispatch desk at <strong>+91 99999 99999</strong>.</span>
+          <span>Need immediate dispatch assistance? Contact our Navi Mumbai dispatch desk at <strong>+91 98000 00000</strong>.</span>
         </div>
       </main>
     </>

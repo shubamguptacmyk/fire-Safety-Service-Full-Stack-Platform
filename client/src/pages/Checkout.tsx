@@ -15,6 +15,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Banknote,
+  AlertCircle,
 } from "lucide-react";
 
 export default function Checkout() {
@@ -45,6 +46,7 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState<"mock" | "cod" | "razorpay">("mock");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   // Fetch cart products
   const { data: allProducts = [] } = useQuery({
@@ -74,7 +76,11 @@ export default function Checkout() {
 
   async function handlePlaceOrder(e: React.FormEvent) {
     e.preventDefault();
-    if (!name || !phone || !line1 || !pincode) return;
+    setCheckoutError(null);
+    if (!name || !phone || !line1 || !pincode) {
+      setCheckoutError("Please fill out all mandatory contact and shipping address fields.");
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -105,7 +111,7 @@ export default function Checkout() {
       clear();
       navigate(`/order-success?orderNumber=${res.order.orderNumber}`);
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message || "Failed to place order");
+      setCheckoutError(err.response?.data?.message || err.message || "Failed to place order. Please verify your details.");
     } finally {
       setIsSubmitting(false);
     }
@@ -485,6 +491,13 @@ export default function Checkout() {
                   </span>
                 </div>
               </div>
+
+              {checkoutError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{checkoutError}</span>
+                </div>
+              )}
 
               <button
                 type="submit"

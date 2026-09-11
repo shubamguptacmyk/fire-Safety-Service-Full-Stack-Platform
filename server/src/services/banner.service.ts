@@ -4,8 +4,21 @@ import { ApiError } from "../utils/ApiError";
 
 export class BannerService {
   static async getActiveBanners(position?: string): Promise<IBanner[]> {
-    const filter: Record<string, any> = { isActive: true };
-    if (position) filter.position = position;
+    const now = new Date();
+    const filter: Record<string, any> = {
+      isActive: true,
+      $and: [
+        { $or: [{ startDate: { $exists: false } }, { startDate: null }, { startDate: { $lte: now } }] },
+        { $or: [{ endDate: { $exists: false } }, { endDate: null }, { endDate: { $gte: now } }] },
+      ],
+    };
+    if (position) {
+      if (position === "home_middle" || position === "home_secondary") {
+        filter.position = { $in: ["home_middle", "home_secondary"] };
+      } else {
+        filter.position = position;
+      }
+    }
     return await Banner.find(filter).sort({ sortOrder: 1, createdAt: 1 });
   }
 
@@ -20,11 +33,19 @@ export class BannerService {
   }
 
   static async createBanner(data: CreateBannerInput): Promise<IBanner> {
-    return await Banner.create(data);
+    const bannerData = { ...data };
+    if (bannerData.order !== undefined && bannerData.sortOrder === undefined) {
+      bannerData.sortOrder = bannerData.order;
+    }
+    return await Banner.create(bannerData);
   }
 
   static async updateBanner(id: string, data: UpdateBannerInput): Promise<IBanner | null> {
-    return await Banner.findByIdAndUpdate(id, data, { new: true });
+    const bannerData = { ...data };
+    if (bannerData.order !== undefined && bannerData.sortOrder === undefined) {
+      bannerData.sortOrder = bannerData.order;
+    }
+    return await Banner.findByIdAndUpdate(id, bannerData, { new: true });
   }
 
   static async deleteBanner(id: string): Promise<boolean> {

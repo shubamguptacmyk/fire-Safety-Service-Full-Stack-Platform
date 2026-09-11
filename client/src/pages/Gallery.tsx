@@ -63,7 +63,7 @@ const FALLBACK_ITEMS: GalleryCard[] = [
     category: "Suppression Systems",
     location: "Five-Star Hotel Banquet, Vashi",
     image:
-      "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=80",
     description:
       "UL-300 compliant wet chemical fire suppression system covering deep fat fryers, cooking ranges, and grease exhaust ducts.",
     projectDate: "December 2023",
@@ -211,6 +211,11 @@ export default function Gallery() {
                     src={item.image}
                     alt={item.title}
                     loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src =
+                        "https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=800&q=80";
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -292,6 +297,11 @@ export default function Gallery() {
               <img
                 src={activeItem.image}
                 alt={activeItem.title}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src =
+                    "https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=80";
+                }}
                 className="w-full h-full object-contain"
               />
             </div>

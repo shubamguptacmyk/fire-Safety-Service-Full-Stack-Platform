@@ -104,12 +104,41 @@ export default function Header() {
 
   return (
     <>
-      <div className="h-1 hazard-strip" />
+      {/* Statutory & Contact Announcement Bar */}
+      <div className="bg-black/90 text-white/80 border-b border-white/10 text-[11px] py-1.5 hidden md:block">
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 text-amber">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber shrink-0" />
+              <span>Category &lsquo;A&rsquo; Licensed Fire Safety Agency &bull; Lic #MFS-MH-2003-4921</span>
+            </span>
+            <span className="hidden xl:inline text-white/50">&bull;</span>
+            <span className="hidden xl:inline text-white/70">
+              Half-Yearly Form B Compliance &amp; BIS IS 15683 / IS 2190
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a
+              href="tel:+919800000000"
+              className="hover:text-amber transition-colors flex items-center gap-1"
+            >
+              <Phone className="w-3 h-3 text-brand" />
+              <span>24/7 Hotline: +91 98000 00000</span>
+            </a>
+            <span className="text-white/30">|</span>
+            <Link to="/contact" className="hover:text-white transition-colors">
+              MIDC Turbhe, Navi Mumbai
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="h-0.5 hazard-strip" />
       <header
         className={`sticky top-0 z-40 transition-all duration-300 ${
           scrolled
             ? "bg-ink/95 backdrop-blur-md shadow-lg py-2 border-b border-white/10"
-            : "bg-ink py-3.5 shadow-md"
+            : "bg-ink py-3 shadow-md"
         }`}
       >
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between gap-3">
@@ -135,9 +164,17 @@ export default function Header() {
 
           {/* Primary Navigation Desktop */}
           <nav
-            className="hidden lg:flex items-center gap-4 text-xs font-medium text-white/80"
+            className="hidden lg:flex items-center gap-3 xl:gap-4 text-xs font-medium text-white/80"
             aria-label="Primary"
           >
+            <Link
+              to="/"
+              className={`hover:text-white transition-colors ${
+                location.pathname === "/" ? "text-white font-bold" : ""
+              }`}
+            >
+              Home
+            </Link>
             <Link
               to="/products"
               className={`hover:text-white transition-colors ${

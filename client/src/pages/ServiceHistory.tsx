@@ -18,78 +18,7 @@ import {
 } from "lucide-react";
 import { serviceBookingService, ApiServiceBooking } from "@/services/serviceBookingService";
 import { useAuthStore } from "@/store/authStore";
-
-const SAMPLE_JOB_CARDS: any[] = [
-  {
-    _id: "demo-jc-1",
-    bookingId: "SRV-2026-0419",
-    serviceType: "Quarterly AMC Inspection",
-    preferredDate: "2026-03-12",
-    assignedTechnicianName: "Ganesh Patil (Grade I Technician)",
-    assignedTechnicianPhone: "9820123456",
-    serviceAddress: {
-      street: "Turbhe Logistics Park - Unit B4",
-      city: "Navi Mumbai",
-      state: "Maharashtra",
-      pincode: "400705",
-    },
-    equipmentDetails: "8x 4kg ABC Extinguishers, 2x 4.5kg CO2 Units, 1x Hose Reel Drum",
-    status: "Completed",
-    serviceReport: {
-      jobCardNumber: "JC-2026-0419",
-      summary: "Quarterly inspection carried out per IS 2190 guidelines.",
-      remarks: "All pressure gauges verified within 15-18 kg/cm² operating zone. Nozzles cleaned, discharge horns unobstructed.",
-      pressureTestPassed: true,
-      formBRef: "FORM-B/MFS/2026/0881",
-    },
-  },
-  {
-    _id: "demo-jc-2",
-    bookingId: "SRV-2026-0284",
-    serviceType: "Cylinder Refilling",
-    preferredDate: "2026-01-20",
-    assignedTechnicianName: "Mahesh Kulkarni (PESO Specialist)",
-    assignedTechnicianPhone: "9820987654",
-    serviceAddress: {
-      street: "Turbhe Logistics Park - Server Room A",
-      city: "Navi Mumbai",
-      state: "Maharashtra",
-      pincode: "400705",
-    },
-    equipmentDetails: "3x 4.5kg CO2 Extinguishers (IS 2878)",
-    status: "Completed",
-    serviceReport: {
-      jobCardNumber: "JC-2026-0284",
-      summary: "Hydraulic pressure testing carried out at 250 bar.",
-      remarks: "Expansion within permissible limits. Stamped with test date 01/26.",
-      pressureTestPassed: true,
-      formBRef: "HT-CERT-2026-302",
-    },
-  },
-  {
-    _id: "demo-jc-3",
-    bookingId: "SRV-2025-0992",
-    serviceType: "Fire Audit",
-    preferredDate: "2025-11-15",
-    assignedTechnicianName: "Sunil Varma (Licensed Consultant)",
-    assignedTechnicianPhone: "9820554433",
-    serviceAddress: {
-      street: "Turbhe Logistics Park - Admin Block",
-      city: "Navi Mumbai",
-      state: "Maharashtra",
-      pincode: "400705",
-    },
-    equipmentDetails: "Complete Premises - Riser, Sprinklers & Detection Grid",
-    status: "Completed",
-    serviceReport: {
-      jobCardNumber: "JC-2025-0992",
-      summary: "Annual fire safety audit per Maharashtra Fire Prevention Act.",
-      remarks: "One strobe flasher in staircase corridor had loose terminal wiring; rectified and re-tested successfully.",
-      pressureTestPassed: true,
-      formBRef: "FORM-B/MFS/2025/1922",
-    },
-  },
-];
+import AccountNav from "@/components/AccountNav";
 
 export default function ServiceHistory() {
   const { isAuthenticated } = useAuthStore();
@@ -107,20 +36,21 @@ export default function ServiceHistory() {
       if (loggedIn) {
         try {
           const res = await serviceBookingService.getMyBookings();
-          if (res.items.length > 0) {
-            setBookings(res.items);
-          } else {
-            setBookings(SAMPLE_JOB_CARDS);
-          }
+          setBookings(res.items || []);
         } catch {
-          setBookings(SAMPLE_JOB_CARDS);
+          try {
+            const local = JSON.parse(localStorage.getItem("ak_service_bookings") || "[]");
+            setBookings(local || []);
+          } catch {
+            setBookings([]);
+          }
         }
       } else {
         try {
           const local = JSON.parse(localStorage.getItem("ak_service_bookings") || "[]");
-          setBookings(local.length > 0 ? [...local, ...SAMPLE_JOB_CARDS] : SAMPLE_JOB_CARDS);
+          setBookings(local || []);
         } catch {
-          setBookings(SAMPLE_JOB_CARDS);
+          setBookings([]);
         }
       }
       setLoading(false);
@@ -166,9 +96,13 @@ export default function ServiceHistory() {
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {/* Compliance Assurance Banner */}
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-950">
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <AccountNav />
+
+          <div className="flex-1 min-w-0 w-full space-y-6">
+            {/* Compliance Assurance Banner */}
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-950">
           <div className="flex items-center gap-2.5">
             <FileCheck className="w-5 h-5 text-emerald-600 shrink-0" />
             <span>
@@ -319,6 +253,8 @@ export default function ServiceHistory() {
             })}
           </div>
         )}
+          </div>
+        </div>
       </main>
 
       {/* Job Card Modal */}

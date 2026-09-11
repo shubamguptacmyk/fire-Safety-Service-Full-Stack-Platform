@@ -37,6 +37,7 @@ export interface Category {
   description?: string;
   image?: string;
   subcategories: Subcategory[];
+  productCount?: number;
   isActive: boolean;
   sortOrder: number;
 }

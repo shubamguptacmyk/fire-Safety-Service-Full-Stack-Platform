@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Seo from "@/components/Seo";
 import { quoteService } from "@/services/quoteService";
 import { useCartStore } from "@/store/cartStore";
+import AccountNav from "@/components/AccountNav";
 import {
   FileSpreadsheet,
   Download,
@@ -88,35 +89,7 @@ export default function Quotes() {
           }))
         );
       } else {
-        // Sample default quote
-        setQuotes([
-          {
-            id: "demo-q1",
-            quoteNumber: "AK-QUO-742910",
-            date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-            validUntil: new Date(Date.now() + 27 * 24 * 60 * 60 * 1000).toISOString(),
-            companyName: "Reliable Logistics Hub",
-            customerName: "Sanjay Deshmukh",
-            phone: "9820098200",
-            status: "APPROVED",
-            rawStatus: "approved",
-            pricing: { subtotal: 34500, gst: 6210, estimatedTotal: 40710 },
-            items: [
-              {
-                name: "SafePro 6kg ABC Stored Pressure Fire Extinguisher (IS 15683)",
-                quantity: 10,
-                unitPrice: 2850,
-                total: 28500,
-              },
-              {
-                name: "Single Landing Valve 63mm Oblique Type (IS 5290)",
-                quantity: 2,
-                unitPrice: 3000,
-                total: 6000,
-              },
-            ],
-          },
-        ]);
+        setQuotes([]);
       }
     } catch {
       setQuotes([]);
@@ -193,9 +166,13 @@ export default function Quotes() {
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {/* Status Filter Tabs */}
-        <div className="flex flex-wrap gap-2">
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <AccountNav />
+
+          <div className="flex-1 min-w-0 w-full space-y-6">
+            {/* Status Filter Tabs */}
+            <div className="flex flex-wrap gap-2">
           {["All", "Submitted", "Approved", "Converted"].map((st) => (
             <button
               key={st}
@@ -367,6 +344,8 @@ export default function Quotes() {
             })}
           </div>
         )}
+          </div>
+        </div>
       </main>
 
       {/* Quote Details Modal */}

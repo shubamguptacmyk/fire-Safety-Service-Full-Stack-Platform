@@ -70,10 +70,10 @@ export default function Contact() {
                 <div>
                   <strong className="text-ink block font-semibold text-sm">Direct Phone & WhatsApp</strong>
                   <p className="text-steel mt-0.5">
-                    Landline: +91 22 2789 0000 / Mobile: +91 99999 99999
+                    Landline: +91 22 2789 0000 / Mobile: +91 98000 00000
                   </p>
                   <a
-                    href="https://wa.me/919999999999"
+                    href="https://wa.me/919800000000"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-green-700 hover:underline"

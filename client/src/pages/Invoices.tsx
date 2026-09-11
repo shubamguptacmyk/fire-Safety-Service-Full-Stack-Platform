@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Seo from "@/components/Seo";
+import AccountNav from "@/components/AccountNav";
 import { invoiceService } from "@/services/invoiceService";
-import { FileText, Download, Printer, ShieldCheck, CheckCircle2, Loader2 } from "lucide-react";
+import { FileText, Download, Printer, ShieldCheck, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 
 export default function Invoices() {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -35,41 +37,32 @@ export default function Invoices() {
         /* guest or fallback */
       }
 
-      // Generate invoice list from saved orders or demo data
-      const orders = JSON.parse(localStorage.getItem("ak_customer_orders") || "[]");
-      if (orders.length > 0) {
-        const generated = orders.map((o: any) => ({
-          invoiceNumber: `INV-${o.orderNumber.replace("AK-ORD-", "2026-")}`,
-          orderNumber: o.orderNumber,
-          date: o.date || new Date().toISOString(),
-          customerName: o.customer?.name,
-          companyName: o.customer?.companyName || "Commercial Client",
-          gstNumber: o.customer?.gstNumber || "27AAAAA0000A1Z5",
-          subtotal: o.pricing?.subtotal || 8000,
-          cgst: Math.round(((o.pricing?.subtotal || 8000) * 0.09)),
-          sgst: Math.round(((o.pricing?.subtotal || 8000) * 0.09)),
-          total: o.pricing?.grandTotal || 9676,
-          status: "Tax Invoice Issued (Paid)",
-        }));
-        setInvoices(generated);
-      } else {
-        setInvoices([
-          {
-            invoiceNumber: "INV-2026-882104",
-            orderNumber: "AK-ORD-882104",
-            date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            customerName: "Rahul Sharma",
-            companyName: "Apex Tech Park Ltd",
-            gstNumber: "27AAACA1234F1Z1",
-            subtotal: 8200,
-            cgst: 738,
-            sgst: 738,
-            total: 9676,
+      // Generate invoice list from saved orders if any
+      try {
+        const orders = JSON.parse(localStorage.getItem("ak_customer_orders") || "[]");
+        if (orders.length > 0) {
+          const generated = orders.map((o: any) => ({
+            invoiceNumber: `INV-${o.orderNumber?.replace("AK-ORD-", "2026-") || o._id}`,
+            orderNumber: o.orderNumber || o._id,
+            date: o.date || o.createdAt || new Date().toISOString(),
+            customerName: o.customer?.name,
+            companyName: o.customer?.companyName || "Commercial Client",
+            gstNumber: o.customer?.gstNumber || "27AAAAA0000A1Z5",
+            subtotal: o.pricing?.subtotal || 0,
+            cgst: Math.round(((o.pricing?.subtotal || 0) * 0.09)),
+            sgst: Math.round(((o.pricing?.subtotal || 0) * 0.09)),
+            total: o.pricing?.grandTotal || 0,
             status: "Tax Invoice Issued (Paid)",
-          },
-        ]);
+          }));
+          setInvoices(generated);
+        } else {
+          setInvoices([]);
+        }
+      } catch {
+        setInvoices([]);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
 
     loadInvoices();
@@ -98,75 +91,88 @@ export default function Invoices() {
         <div className="max-w-6xl mx-auto px-4">
           <span className="text-xs font-bold uppercase tracking-wider text-brand">Statutory Accounting</span>
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-ink mt-0.5">
-            GST Invoices & Tax Receipts
+            GST Tax Invoices &amp; Receipts
           </h1>
           <p className="text-xs sm:text-sm text-steel mt-0.5">
-            Download compliant tax invoices eligible for Input Tax Credit (ITC) under Section 16 of CGST Act.
+            Official tax invoices conforming to Section 31 of CGST Act with 100% ITC eligibility (HSN 8424 / 9987).
           </p>
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        <div className="space-y-4">
-          {invoices.map((inv, idx) => (
-            <div
-              key={idx}
-              className="bg-white border border-black/10 rounded-xl p-6 shadow-sm space-y-4"
-            >
-              <div className="flex flex-wrap items-center justify-between pb-3 border-b border-black/10 gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-brand" />
-                    <span className="font-mono text-base font-bold text-ink">{inv.invoiceNumber}</span>
-                    <span className="text-[11px] bg-green-100 text-green-800 font-semibold px-2 py-0.5 rounded">
-                      {inv.status}
-                    </span>
-                  </div>
-                  <p className="text-xs text-steel mt-1">
-                    Billed to: <strong>{inv.companyName}</strong> ({inv.customerName}) · GSTIN:{" "}
-                    <span className="font-mono text-ink font-semibold">{inv.gstNumber}</span>
-                  </p>
-                </div>
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <AccountNav />
 
-                <div className="text-right text-xs text-steel">
-                  <span>Date: {new Date(inv.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
-                  <p className="text-[11px]">Ref: {inv.orderNumber}</p>
-                </div>
+          <div className="flex-1 min-w-0 w-full">
+            {isLoading ? (
+              <div className="py-20 text-center space-y-2">
+                <Loader2 className="w-8 h-8 animate-spin text-brand mx-auto" />
+                <p className="text-xs text-steel">Retrieving official tax invoices...</p>
               </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                <div className="p-3 bg-paper rounded">
-                  <span className="text-steel block text-[10px]">Taxable Value</span>
-                  <span className="font-bold text-ink text-sm">₹{inv.subtotal.toLocaleString("en-IN")}</span>
+            ) : invoices.length === 0 ? (
+              <div className="p-16 bg-white border border-black/10 rounded-2xl text-center max-w-md mx-auto shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-paper flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-8 h-8 text-steel/40" />
                 </div>
-                <div className="p-3 bg-paper rounded">
-                  <span className="text-steel block text-[10px]">CGST (9%)</span>
-                  <span className="font-semibold text-ink">₹{inv.cgst.toLocaleString("en-IN")}</span>
-                </div>
-                <div className="p-3 bg-paper rounded">
-                  <span className="text-steel block text-[10px]">SGST (9%)</span>
-                  <span className="font-semibold text-ink">₹{inv.sgst.toLocaleString("en-IN")}</span>
-                </div>
-                <div className="p-3 bg-paper rounded">
-                  <span className="text-steel block text-[10px]">Grand Total (INR)</span>
-                  <span className="font-bold text-brand text-sm">₹{inv.total.toLocaleString("en-IN")}</span>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-black/10 flex items-center justify-between">
-                <span className="text-[11px] text-steel">
-                  Supplier GSTIN: 27AABCA9999P1Z3 · HSN Code: 8424 (Fire Extinguishing Apparatus)
-                </span>
-
-                <button
-                  onClick={() => handleDownloadInvoice(inv)}
-                  className="px-4 py-2 bg-brand hover:bg-brand-dark text-white rounded text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
+                <h2 className="font-display font-bold text-lg text-ink">No Tax Invoices Found</h2>
+                <p className="text-steel text-xs sm:text-sm mt-1 leading-relaxed">
+                  Official GST tax invoices are automatically generated upon order completion or verified AMC maintenance billing.
+                </p>
+                <Link
+                  to="/products"
+                  className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-brand hover:bg-brand-dark text-white text-xs font-bold rounded-lg shadow-md transition-all"
                 >
-                  <Download className="w-3.5 h-3.5" /> Download Official GST Invoice PDF
-                </button>
+                  Browse Equipment Catalog <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
-            </div>
-          ))}
+            ) : (
+              <div className="space-y-4">
+                {invoices.map((inv, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white border border-black/10 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:border-brand/30 transition-all"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-mono text-base font-bold text-brand">{inv.invoiceNumber}</span>
+                        <span className="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> {inv.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-steel">
+                        Order Ref: <strong className="text-ink font-mono">{inv.orderNumber}</strong> &bull; Date:{" "}
+                        {new Date(inv.date).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                      <div className="text-xs text-steel">
+                        <span>Billed To: <strong className="text-ink">{inv.companyName}</strong></span>
+                        {inv.gstNumber && <span className="ml-2 font-mono">({inv.gstNumber})</span>}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-row sm:flex-col items-end justify-between w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-black/5 gap-2">
+                      <div className="text-left sm:text-right">
+                        <span className="text-[10px] text-steel block">Grand Total (incl. GST)</span>
+                        <span className="text-xl font-bold font-display text-ink">
+                          ₹{inv.total.toLocaleString("en-IN")}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => handleDownloadInvoice(inv)}
+                        className="px-4 py-2 bg-brand hover:bg-brand-dark text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Download Tax Invoice (PDF)
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </>
