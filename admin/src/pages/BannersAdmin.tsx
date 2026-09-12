@@ -14,6 +14,7 @@ import {
 import { adminMarketingService, AdminBannerItem } from "@/services/adminMarketingService";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import ImageUploadInput from "@/components/ImageUploadInput";
 import { useToast } from "@/store/toastStore";
 
 export default function BannersAdmin() {
@@ -83,6 +84,10 @@ export default function BannersAdmin() {
 
   async function handleSaveBanner(e: React.FormEvent) {
     e.preventDefault();
+    if (!image.trim()) {
+      toast.error("Please provide or upload a banner image");
+      return;
+    }
     setIsSaving(true);
     try {
       const payload = {
@@ -246,8 +251,8 @@ export default function BannersAdmin() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl border border-black/10 space-y-4">
-            <div className="flex items-center justify-between border-b border-black/10 pb-3">
+          <div className="bg-white rounded-xl max-w-xl w-full p-6 shadow-2xl border border-black/10 space-y-4 max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between border-b border-black/10 pb-3 shrink-0">
               <h3 className="font-display font-bold text-base text-ink">
                 {editingId ? "Edit Promotional Banner" : "Add Promotional Banner"}
               </h3>
@@ -256,7 +261,7 @@ export default function BannersAdmin() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveBanner} className="space-y-3 text-xs">
+            <form onSubmit={handleSaveBanner} className="space-y-3.5 text-xs overflow-y-auto flex-1 pr-1">
               <div>
                 <label className="font-bold text-ink block mb-1">Banner Title *</label>
                 <input
@@ -280,17 +285,15 @@ export default function BannersAdmin() {
                 />
               </div>
 
-              <div>
-                <label className="font-bold text-ink block mb-1">Image URL *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="https://example.com/banner-hero.jpg"
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                  className="w-full p-2 bg-paper/50 border border-black/10 rounded focus:outline-none focus:ring-1 focus:ring-brand"
-                />
-              </div>
+              <ImageUploadInput
+                label="Banner Image"
+                required
+                value={image}
+                onChange={setImage}
+                folder="banners"
+                aspectRatio="banner"
+                helpText="Choose 'Upload Image' to upload from your computer or 'Image URL' to enter an image address directly."
+              />
 
               <div className="grid grid-cols-2 gap-3">
                 <div>

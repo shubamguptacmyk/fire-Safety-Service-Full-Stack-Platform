@@ -17,12 +17,6 @@ export const reviewController = {
     sendSuccess(res, 200, "Product reviews retrieved", result);
   }),
 
-  getRecentApprovedReviews: asyncHandler(async (req: Request, res: Response) => {
-    const limit = parseInt(req.query.limit as string, 10) || 6;
-    const result = await ReviewService.listAllReviews({ status: "approved", limit });
-    sendSuccess(res, 200, "Recent approved reviews", result.items);
-  }),
-
   listAllReviews: asyncHandler(async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string, 10) || 1;
     const limit = parseInt(req.query.limit as string, 10) || 20;

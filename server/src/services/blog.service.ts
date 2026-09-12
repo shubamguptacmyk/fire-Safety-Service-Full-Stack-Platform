@@ -85,7 +85,7 @@ export class BlogService {
       BlogPost.countDocuments(filter),
     ]);
 
-    return { items, total, page, limit, totalPages: Math.ceil(total / limit) || 1 };
+    return { items, posts: items, total, page, limit, totalPages: Math.ceil(total / limit) || 1 };
   }
 
   static async getPostById(id: string): Promise<IBlogPost> {
@@ -102,8 +102,19 @@ export class BlogService {
     const existing = await BlogPost.findOne({ slug });
     if (existing) throw ApiError.badRequest("A blog post with this slug already exists");
 
+    const featImg =
+      data.featuredImage ||
+      (data as any).image ||
+      (data as any).coverImage ||
+      "";
+    const sTitle = data.seoTitle || (data as any).seo?.metaTitle;
+    const sDesc = data.seoDescription || (data as any).seo?.metaDescription;
+
     return await BlogPost.create({
       ...data,
+      featuredImage: featImg,
+      seoTitle: sTitle,
+      seoDescription: sDesc,
       slug,
       author: {
         id: new Types.ObjectId(author.id.toString()),
@@ -116,10 +127,28 @@ export class BlogService {
 
   static async updatePost(id: string, data: UpdateBlogPostInput): Promise<IBlogPost | null> {
     const payload: any = { ...data };
-    if (data.title && !data.slug) {
-      payload.slug = slugify(data.title);
-    } else if (data.slug) {
+    if (data.slug) {
       payload.slug = slugify(data.slug);
+      const existing = await BlogPost.findOne({ slug: payload.slug, _id: { $ne: id } });
+      if (existing) {
+        throw ApiError.badRequest("A blog post with this slug already exists");
+      }
+    } else {
+      delete payload.slug;
+    }
+    if ((data as any).image && !payload.featuredImage) {
+      payload.featuredImage = (data as any).image;
+    }
+    if ((data as any).coverImage && !payload.featuredImage) {
+      payload.featuredImage = (data as any).coverImage;
+    }
+    if ((data as any).seo) {
+      if ((data as any).seo.metaTitle && !payload.seoTitle) {
+        payload.seoTitle = (data as any).seo.metaTitle;
+      }
+      if ((data as any).seo.metaDescription && !payload.seoDescription) {
+        payload.seoDescription = (data as any).seo.metaDescription;
+      }
     }
     if (data.status === "published") {
       payload.publishedAt = new Date();

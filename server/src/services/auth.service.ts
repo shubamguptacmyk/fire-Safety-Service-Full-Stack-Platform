@@ -301,6 +301,7 @@ export const authService = {
 export function sanitizeUser(user: IUser) {
   return {
     id: user._id.toString(),
+    _id: user._id,
     name: user.name,
     email: user.email,
     phone: user.phone,

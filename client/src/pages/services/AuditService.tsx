@@ -1,7 +1,26 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Seo from "@/components/Seo";
-import { ClipboardCheck, CheckCircle2, ShieldCheck, Building2, Phone, Calendar, ArrowRight, Loader2 } from "lucide-react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Badge from "@/components/Badge";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Textarea from "@/components/ui/Textarea";
+import TrustBadge from "@/components/ui/TrustBadge";
+import {
+  ClipboardCheck,
+  CheckCircle2,
+  ShieldCheck,
+  Building2,
+  Phone,
+  Calendar,
+  ArrowRight,
+  Loader2,
+  FileText,
+  AlertTriangle,
+  Award,
+} from "lucide-react";
 import { serviceBookingService } from "@/services/serviceBookingService";
 
 export default function AuditService() {
@@ -34,7 +53,7 @@ export default function AuditService() {
         customerName: name,
         companyName: company || undefined,
         phone,
-        email: email || `${phone}@placeholder.akfiresafety.com`,
+        email: email || `${phone}@customer.shubamfire.in`,
         serviceType: "Fire Audit",
         serviceAddress: {
           street: location,
@@ -50,7 +69,7 @@ export default function AuditService() {
       setAuditRefId(res.bookingId);
       setSubmitted(true);
     } catch {
-      const fallbackId = `AK-AUDIT-${Date.now().toString().slice(-5)}`;
+      const fallbackId = `SFP-AUDIT-${Date.now().toString().slice(-6)}`;
       setAuditRefId(fallbackId);
       setSubmitted(true);
     } finally {
@@ -58,227 +77,254 @@ export default function AuditService() {
     }
   }
 
+  const auditScopePoints = [
+    "NBC 2016 Part IV & Maharashtra Fire Act compliance gap audit",
+    "Escape route clearance, panic exit hardware, and stairwell pressurization",
+    "Hydrant wet riser static & dynamic pressure testing (min 3.5 kg/cm²)",
+    "Fire pump house auto-start sequential logic verification",
+    "Smoke detection sensitivity, manual call points & strobe sounder testing",
+    "Comprehensive Fire Audit Report with prioritized risk mitigation matrix",
+  ];
+
   return (
     <>
       <Seo
-        title="Fire Safety Audit & Risk Assessment — AK Fire Safety"
+        title="Fire Safety Audit & Risk Assessment — Shubam Fire Protection"
         description="Comprehensive building fire safety inspection and risk assessments conforming to National Building Code (NBC Part IV) and Maharashtra Fire Services norms."
       />
 
-      <div className="bg-ink text-white py-12 border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4">
-          <span className="text-xs uppercase tracking-wider text-amber font-semibold">Statutory Risk Analysis</span>
-          <h1 className="text-3xl sm:text-4xl font-display font-bold mt-1">
-            Building Fire Safety Audits & Compliance Review
-          </h1>
-          <p className="text-white/70 text-sm mt-2 max-w-2xl leading-relaxed">
-            Our certified Fire Safety Officers evaluate escape routes, hydrant pump health, detection sensitivity,
-            and compliance gaps to deliver a comprehensive Fire Audit Report and Form B certification.
-          </p>
-        </div>
-      </div>
+      {/* Hero Header */}
+      <section className="bg-slate-900 text-white py-12 lg:py-16 border-b border-slate-800 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 opacity-90" />
+        <div className="absolute right-0 top-0 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl pointer-events-none" />
 
-      <main className="max-w-4xl mx-auto px-4 py-12">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumb
+            items={[
+              { label: "Services", href: "/services" },
+              { label: "Building Fire Safety Audits" },
+            ]}
+            className="mb-6 text-slate-400 [&_a]:text-slate-400 hover:[&_a]:text-white"
+          />
+
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary-950 text-primary-300 border border-primary-800 mb-3">
+              <ClipboardCheck className="w-3.5 h-3.5" /> NBC Part IV & Maharashtra Fire Act
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-white">
+              Building Fire Safety Audits & Compliance
+            </h1>
+            <p className="text-slate-300 text-base sm:text-lg mt-4 leading-relaxed">
+              Our licensed Fire Safety Consultants conduct thorough on-site physical audits of your facility to evaluate escape corridors, hydrant pump health, alarm loop integrity, and regulatory readiness for municipal Form B filings.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Badges */}
+      <TrustBadge />
+
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {submitted ? (
-          <div className="bg-white border border-black/10 rounded-xl p-8 text-center shadow-sm space-y-4">
-            <div className="w-16 h-16 bg-green-100 text-green-700 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 text-center shadow-xl space-y-6 max-w-2xl mx-auto">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
               <CheckCircle2 className="w-10 h-10" />
             </div>
-            <h2 className="font-display text-2xl font-bold text-ink">Audit Request Submitted!</h2>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 block mb-1">
+                Request Registered
+              </span>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
+                Fire Safety Audit Request Submitted
+              </h2>
+            </div>
+
             {auditRefId && (
-              <p className="text-xs font-mono font-bold text-brand bg-paper px-3 py-1 rounded inline-block">
-                Reference ID: {auditRefId}
-              </p>
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl inline-block">
+                <span className="text-xs text-slate-500 block">Audit Tracking Reference</span>
+                <span className="font-mono text-base font-bold text-primary-700">{auditRefId}</span>
+              </div>
             )}
-            <p className="text-xs sm:text-sm text-ink max-w-md mx-auto leading-relaxed">
-              Thank you <strong>{name}</strong>. Our Senior Fire Safety Consultant will review the technical parameters
-              for <strong>{company || "your building"}</strong> and contact you within 4 business hours with an audit proposal.
+
+            <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+              Thank you <strong>{name}</strong>. Our Senior Fire Safety Consultant will evaluate the premises profile for <strong>{company || "your facility"}</strong> and contact you within 4 business hours to confirm your scheduled on-site audit.
             </p>
-            <div className="pt-4 flex items-center justify-center gap-3">
-              <Link
-                to="/service-history"
-                className="px-5 py-2.5 bg-brand text-white text-xs font-semibold rounded-md hover:bg-brand-dark"
-              >
-                Track Status in Service History
-              </Link>
-              <button
-                onClick={() => setSubmitted(false)}
-                className="px-5 py-2.5 bg-paper text-ink border border-black/10 text-xs font-semibold rounded-md hover:bg-gray-100"
-              >
-                Submit Another Request
-              </button>
+
+            <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
+              <Button asChild variant="primary">
+                <Link to="/service-history">View in Service History</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link to="/services">Explore Other Services</Link>
+              </Button>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="bg-white border border-black/10 rounded-xl p-6 sm:p-8 shadow-sm space-y-6">
-            <div>
-              <h2 className="font-display text-xl font-bold text-ink flex items-center gap-2">
-                <ClipboardCheck className="w-5 h-5 text-brand" /> Request On-Site Fire Safety Audit
-              </h2>
-              <p className="text-xs text-steel mt-0.5">
-                Fill in basic facility characteristics to receive an upfront scope of work and audit proposal.
-              </p>
-            </div>
+          <div className="grid lg:grid-cols-5 gap-10 items-start">
+            {/* Left Scope Info */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-slate-900 text-white p-7 rounded-3xl border border-slate-800 space-y-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary-400">
+                  Audit Scope & Methodology
+                </span>
+                <h3 className="font-display font-bold text-xl text-white">
+                  What Our Fire Safety Audit Covers
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Conducted strictly according to IS 14489, NBC 2016 Part IV, and CFO requirements to protect lives and avoid municipal notices.
+                </p>
 
-            {/* Contact */}
-            <div className="grid sm:grid-cols-2 gap-4 pt-2">
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">Contact Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Vikram Kulkarni"
-                  className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                />
+                <ul className="space-y-3 text-xs text-slate-200 pt-2">
+                  {auditScopePoints.map((pt, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <span className="leading-snug">{pt}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">Company / Society Name</label>
-                <input
-                  type="text"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  placeholder="e.g. Greenfield CHS Ltd"
-                  className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                />
-              </div>
-            </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">Mobile Number *</label>
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="9876543210"
-                  className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">Corporate Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="audit@company.com"
-                  className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                />
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+                <div className="flex items-center gap-2.5 text-slate-900 font-bold text-sm">
+                  <Award className="w-5 h-5 text-primary-600" />
+                  <span>Licensed Agency Certification</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Shubam Fire Protection is an authorized Licensed Agency under Maharashtra Fire Services, qualified to issue legally recognized Fire Audit Reports and Form B certificates.
+                </p>
               </div>
             </div>
 
-            {/* Building Specs */}
-            <div className="space-y-4 pt-4 border-t border-black/10">
-              <h3 className="font-bold text-sm text-ink flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-brand" /> Building & Occupancy Parameters
-              </h3>
+            {/* Right Audit Request Form */}
+            <div className="lg:col-span-3 bg-white border border-slate-200 rounded-3xl p-7 sm:p-9 shadow-xl">
+              <div className="mb-6 pb-4 border-b border-slate-100">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary-600">
+                  Schedule Audit
+                </span>
+                <h3 className="font-display font-bold text-2xl text-slate-900 mt-0.5">
+                  Request On-Site Fire Safety Audit
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Fill in your building details to receive a customized technical audit scope and quotation.
+                </p>
+              </div>
 
-              <div className="grid sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Building Occupancy Type</label>
-                  <select
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Contact Name *"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Ramesh Kulkarni"
+                  />
+                  <Input
+                    label="Company / Society Name"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    placeholder="e.g. Emerald Heights CHS"
+                  />
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Phone Number *"
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="98XXXXXXXX"
+                  />
+                  <Input
+                    label="Official Email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="contact@company.com"
+                  />
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Select
+                    label="Premises Classification"
                     value={buildingType}
                     onChange={(e) => setBuildingType(e.target.value)}
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none bg-white"
-                  >
-                    <option value="Commercial Office Tower">Commercial Office Tower</option>
-                    <option value="Residential Housing Society">Residential Housing Society</option>
-                    <option value="Industrial / Manufacturing Plant">Industrial / Manufacturing Plant</option>
-                    <option value="Hospital / Healthcare Facility">Hospital / Healthcare Facility</option>
-                    <option value="School / College / Institution">School / College / Institution</option>
-                    <option value="Warehouse / Logistics Center">Warehouse / Logistics Center</option>
-                    <option value="Hotel / Restaurant / Banquet">Hotel / Restaurant / Banquet</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Built-up Area (Sq. Ft.)</label>
-                  <input
-                    type="text"
+                    options={[
+                      { value: "Commercial Office Tower", label: "Commercial Office Tower" },
+                      { value: "Residential Housing Society", label: "Residential Housing Society" },
+                      { value: "Industrial Manufacturing Plant", label: "Industrial Manufacturing Plant" },
+                      { value: "Warehouse / Logistics Park", label: "Warehouse / Logistics Park" },
+                      { value: "Hospital / Healthcare Facility", label: "Hospital / Healthcare Facility" },
+                      { value: "Hotel / Mall / Commercial Center", label: "Hotel / Mall / Commercial Center" },
+                      { value: "Educational Institution / School", label: "Educational Institution / School" },
+                    ]}
+                  />
+
+                  <Input
+                    label="Total Built-Up Area (sq. ft.)"
                     value={buildingSize}
                     onChange={(e) => setBuildingSize(e.target.value)}
-                    placeholder="e.g. 45,000 sq ft"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
+                    placeholder="e.g. 45,000 sq.ft."
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Number of Floors</label>
-                  <input
-                    type="text"
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Number of Floors"
                     value={numberOfFloors}
                     onChange={(e) => setNumberOfFloors(e.target.value)}
-                    placeholder="e.g. G + 14 Floors"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
+                    placeholder="e.g. G + 14 Floors + 2 Basements"
+                  />
+                  <Input
+                    label="Approx. Extinguishers Count"
+                    value={numberOfExtinguishers}
+                    onChange={(e) => setNumberOfExtinguishers(e.target.value)}
+                    placeholder="e.g. 40 units"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">Premises Location / Node *</label>
-                <input
-                  type="text"
+                <Input
+                  label="Site Location / Address *"
                   required
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Sector 30A, Vashi, Navi Mumbai"
-                  className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
+                  placeholder="Plot No., Sector, MIDC / Node, City"
                 />
-              </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Approx. Extinguishers On-Site</label>
-                  <input
-                    type="text"
-                    value={numberOfExtinguishers}
-                    onChange={(e) => setNumberOfExtinguishers(e.target.value)}
-                    placeholder="e.g. 35 units"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Existing Fixed Fire Systems</label>
-                  <input
-                    type="text"
-                    value={existingFireSystems}
-                    onChange={(e) => setExistingFireSystems(e.target.value)}
-                    placeholder="e.g. Hydrant wet risers, Sprinklers, Fire Panel"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-              </div>
+                <Input
+                  label="Existing Fire Fighting Installations"
+                  value={existingFireSystems}
+                  onChange={(e) => setExistingFireSystems(e.target.value)}
+                  placeholder="e.g. Wet risers, Sprinklers, Yard hydrants, Fire alarms"
+                />
 
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Target Audit Date</label>
-                  <input
-                    type="date"
-                    value={preferredAuditDate}
-                    onChange={(e) => setPreferredAuditDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Specific Objectives</label>
-                  <input
-                    type="text"
-                    value={requirements}
-                    onChange={(e) => setRequirements(e.target.value)}
-                    placeholder="e.g. Municipal Notice Reply / Form B Compliance"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-              </div>
+                <Input
+                  label="Preferred Audit Date"
+                  type="date"
+                  value={preferredAuditDate}
+                  onChange={(e) => setPreferredAuditDate(e.target.value)}
+                />
+
+                <Textarea
+                  label="Specific Requirements / Municipal Notices"
+                  rows={3}
+                  value={requirements}
+                  onChange={(e) => setRequirements(e.target.value)}
+                  placeholder="Mention if you have received a Fire Department notice, insurance audit requirement, or Form B filing deadline..."
+                />
+
+                <Button
+                  type="submit"
+                  size="lg"
+                  variant="primary"
+                  className="w-full mt-2"
+                  isLoading={loading}
+                >
+                  Schedule On-Site Fire Audit <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Button>
+              </form>
             </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 bg-brand hover:bg-brand-dark text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 shadow-md transition-colors"
-            >
-              <ClipboardCheck className="w-4 h-4" /> Request Comprehensive Fire Audit
-            </button>
-          </form>
+          </div>
         )}
       </main>
     </>

@@ -1,6 +1,11 @@
 import { useState } from "react";
 import Seo from "@/components/Seo";
-import AccountNav from "@/components/AccountNav";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Badge from "@/components/Badge";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Modal from "@/components/ui/Modal";
+import EmptyState from "@/components/ui/EmptyState";
 import { MapPin, Plus, Trash2, Home, Building2, Check, X } from "lucide-react";
 
 export default function Addresses() {
@@ -10,7 +15,7 @@ export default function Addresses() {
       label: "Main Corporate Office",
       isDefault: true,
       line1: "Plot No. 42, Sector 19, Vashi",
-      line2: "Opposite APMC Grain Market",
+      line2: "Opposite APMC Market",
       city: "Navi Mumbai",
       state: "Maharashtra",
       pincode: "400703",
@@ -28,7 +33,7 @@ export default function Addresses() {
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [label, setLabel] = useState("Office");
+  const [label, setLabel] = useState("Corporate Office");
   const [line1, setLine1] = useState("");
   const [line2, setLine2] = useState("");
   const [city, setCity] = useState("Navi Mumbai");
@@ -66,190 +71,169 @@ export default function Addresses() {
   return (
     <>
       <Seo
-        title="Saved Addresses — AK Fire Safety Service"
-        description="Manage your facility delivery and billing addresses."
+        title="Saved Addresses & Facility Sites — Shubam Fire Protection"
+        description="Manage your facility delivery and site inspection addresses across Mumbai MMR."
       />
 
-      <div className="bg-paper border-b border-black/10 py-6">
-        <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-brand">Account Settings</span>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-ink mt-0.5">
-              Saved Facility Addresses
-            </h1>
-            <p className="text-xs sm:text-sm text-steel mt-0.5">
-              Manage locations for equipment deliveries, refill pick-up, and on-site technician inspections.
-            </p>
+      <div className="bg-slate-900 text-white py-8 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumb
+            items={[
+              { label: "Account Portal", href: "/profile" },
+              { label: "Facility Addresses" },
+            ]}
+            className="mb-4 text-slate-400 [&_a]:text-slate-400 hover:[&_a]:text-white"
+          />
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-primary-400 font-mono">
+                Site & Logistics Management
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-white mt-1">
+                Saved Facility Addresses
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                Manage locations for equipment deliveries, refill pick-up, and on-site technician inspections.
+              </p>
+            </div>
+
+            <Button variant="primary" size="md" onClick={() => setIsModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-1.5" /> Add New Address
+            </Button>
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-brand hover:bg-brand-dark text-white rounded text-xs font-semibold flex items-center gap-1.5 shadow-sm"
-          >
-            <Plus className="w-4 h-4" /> Add New Address
-          </button>
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          <AccountNav />
-
-          <div className="flex-1 min-w-0 w-full">
-            <div className="grid sm:grid-cols-2 gap-6">
-              {addresses.map((addr) => (
-                <div
-                  key={addr.id}
-                  className={`bg-white border rounded-xl p-5 shadow-sm space-y-3 relative ${
-                    addr.isDefault ? "border-brand ring-1 ring-brand/20" : "border-black/10"
-                  }`}
-                >
-                  <div className="flex items-center justify-between pb-2 border-b border-black/10">
-                    <span className="font-bold text-sm text-ink flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-brand" /> {addr.label}
-                    </span>
-                    {addr.isDefault && (
-                      <span className="text-[10px] bg-brand text-white font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                        Default
-                      </span>
-                    )}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+        {addresses.length === 0 ? (
+          <EmptyState
+            icon={MapPin}
+            title="No facility addresses saved"
+            description="Add your office, factory, or society address for faster equipment delivery and service bookings."
+            actionText="Add Address"
+            onAction={() => setIsModalOpen(true)}
+          />
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-6">
+            {addresses.map((addr) => (
+              <div
+                key={addr.id}
+                className={`bg-white border rounded-3xl p-6 shadow-sm space-y-4 relative transition-all ${
+                  addr.isDefault
+                    ? "border-primary-600 ring-2 ring-primary-100"
+                    : "border-slate-200/80 hover:border-slate-300"
+                }`}
+              >
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-primary-600" />
+                    <span className="font-bold text-sm text-slate-900">{addr.label}</span>
                   </div>
-
-                  <div className="text-xs text-steel leading-relaxed space-y-0.5">
-                    <p className="text-ink font-medium">{addr.line1}</p>
-                    {addr.line2 && <p>{addr.line2}</p>}
-                    <p>
-                      {addr.city}, {addr.state} - <strong className="text-ink font-mono">{addr.pincode}</strong>
-                    </p>
-                  </div>
-
-                  <div className="pt-2 flex items-center justify-between border-t border-black/5 text-xs">
-                    {!addr.isDefault ? (
-                      <button
-                        onClick={() => handleSetDefault(addr.id)}
-                        className="text-brand font-semibold hover:underline"
-                      >
-                        Set as Default
-                      </button>
-                    ) : (
-                      <span className="text-green-700 font-semibold flex items-center gap-1 text-[11px]">
-                        <Check className="w-3.5 h-3.5" /> Active for Deliveries
-                      </span>
-                    )}
-                    <button
-                      onClick={() => handleDelete(addr.id)}
-                      className="text-steel hover:text-red-600 p-1"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  {addr.isDefault && (
+                    <Badge tone="primary">Default Site</Badge>
+                  )}
                 </div>
-              ))}
-            </div>
+
+                <div className="text-xs sm:text-sm text-slate-600 leading-relaxed space-y-1">
+                  <p className="text-slate-900 font-medium">{addr.line1}</p>
+                  {addr.line2 && <p>{addr.line2}</p>}
+                  <p>
+                    {addr.city}, {addr.state} -{" "}
+                    <strong className="text-slate-900 font-mono">{addr.pincode}</strong>
+                  </p>
+                </div>
+
+                <div className="pt-3 flex items-center justify-between border-t border-slate-100 text-xs">
+                  {!addr.isDefault ? (
+                    <button
+                      onClick={() => handleSetDefault(addr.id)}
+                      className="text-primary-700 font-bold hover:underline"
+                    >
+                      Set as Default Site
+                    </button>
+                  ) : (
+                    <span className="text-emerald-700 font-semibold flex items-center gap-1 text-xs">
+                      <Check className="w-4 h-4" /> Active Dispatch Destination
+                    </span>
+                  )}
+
+                  <button
+                    onClick={() => handleDelete(addr.id)}
+                    className="p-1.5 text-slate-400 hover:text-primary-600 transition-colors"
+                    title="Delete Address"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
       </main>
 
-      {/* Add Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-ink/50 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-black/10 z-10">
-            <div className="flex items-center justify-between pb-3 border-b border-black/10 mb-4">
-              <h3 className="font-bold text-base text-ink">Add New Facility Address</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-steel hover:text-ink">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      {/* Add Address Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Add New Facility Address"
+      >
+        <form onSubmit={handleAddAddress} className="space-y-4 text-xs sm:text-sm">
+          <Input
+            label="Address Label *"
+            required
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="e.g. Office, Factory, Warehouse, Society"
+          />
 
-            <form onSubmit={handleAddAddress} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">Address Label *</label>
-                <input
-                  type="text"
-                  required
-                  value={label}
-                  onChange={(e) => setLabel(e.target.value)}
-                  placeholder="e.g. Office, Factory, Warehouse, Society"
-                  className="w-full px-3 py-1.5 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                />
-              </div>
+          <Input
+            label="Building / Street Address *"
+            required
+            value={line1}
+            onChange={(e) => setLine1(e.target.value)}
+            placeholder="Flat/Unit, Building, Plot No."
+          />
 
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">Building / Street *</label>
-                <input
-                  type="text"
-                  required
-                  value={line1}
-                  onChange={(e) => setLine1(e.target.value)}
-                  placeholder="Flat/Unit, Building, Plot No."
-                  className="w-full px-3 py-1.5 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                />
-              </div>
+          <Input
+            label="Area / Sector / Landmark"
+            value={line2}
+            onChange={(e) => setLine2(e.target.value)}
+            placeholder="e.g. Sector 19A, Near APMC Market"
+          />
 
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">Area / Landmark</label>
-                <input
-                  type="text"
-                  value={line2}
-                  onChange={(e) => setLine2(e.target.value)}
-                  placeholder="Sector, Landmark"
-                  className="w-full px-3 py-1.5 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">City</label>
-                  <input
-                    type="text"
-                    required
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-2.5 py-1.5 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">State</label>
-                  <input
-                    type="text"
-                    required
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    className="w-full px-2.5 py-1.5 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Pincode *</label>
-                  <input
-                    type="text"
-                    required
-                    value={pincode}
-                    onChange={(e) => setPincode(e.target.value)}
-                    placeholder="400703"
-                    className="w-full px-2.5 py-1.5 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-black/10">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-3.5 py-1.5 border border-black/10 rounded text-xs font-semibold hover:bg-paper"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 bg-brand text-white rounded text-xs font-semibold hover:bg-brand-dark"
-                >
-                  Save Address
-                </button>
-              </div>
-            </form>
+          <div className="grid grid-cols-3 gap-3">
+            <Input
+              label="City"
+              required
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+            />
+            <Input
+              label="State"
+              required
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+            />
+            <Input
+              label="Pincode *"
+              required
+              value={pincode}
+              onChange={(e) => setPincode(e.target.value)}
+              placeholder="400703"
+            />
           </div>
-        </div>
-      )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <Button variant="secondary" type="button" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit">
+              Save Address
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </>
   );
 }

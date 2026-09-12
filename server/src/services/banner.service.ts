@@ -4,26 +4,13 @@ import { ApiError } from "../utils/ApiError";
 
 export class BannerService {
   static async getActiveBanners(position?: string): Promise<IBanner[]> {
-    const now = new Date();
-    const filter: Record<string, any> = {
-      isActive: true,
-      $and: [
-        { $or: [{ startDate: { $exists: false } }, { startDate: null }, { startDate: { $lte: now } }] },
-        { $or: [{ endDate: { $exists: false } }, { endDate: null }, { endDate: { $gte: now } }] },
-      ],
-    };
-    if (position) {
-      if (position === "home_middle" || position === "home_secondary") {
-        filter.position = { $in: ["home_middle", "home_secondary"] };
-      } else {
-        filter.position = position;
-      }
-    }
-    return await Banner.find(filter).sort({ sortOrder: 1, createdAt: 1 });
+    const filter: Record<string, any> = { isActive: true };
+    if (position) filter.position = position;
+    return await Banner.find(filter).sort({ sortOrder: 1, order: 1, createdAt: 1 });
   }
 
   static async listAllBannersAdmin(): Promise<IBanner[]> {
-    return await Banner.find({}).sort({ position: 1, sortOrder: 1 });
+    return await Banner.find({}).sort({ position: 1, sortOrder: 1, order: 1 });
   }
 
   static async getBannerById(id: string): Promise<IBanner> {
@@ -33,19 +20,23 @@ export class BannerService {
   }
 
   static async createBanner(data: CreateBannerInput): Promise<IBanner> {
-    const bannerData = { ...data };
-    if (bannerData.order !== undefined && bannerData.sortOrder === undefined) {
-      bannerData.sortOrder = bannerData.order;
+    const payload: any = { ...data };
+    if (payload.order !== undefined && payload.sortOrder === undefined) {
+      payload.sortOrder = payload.order;
+    } else if (payload.sortOrder !== undefined && payload.order === undefined) {
+      payload.order = payload.sortOrder;
     }
-    return await Banner.create(bannerData);
+    return await Banner.create(payload);
   }
 
   static async updateBanner(id: string, data: UpdateBannerInput): Promise<IBanner | null> {
-    const bannerData = { ...data };
-    if (bannerData.order !== undefined && bannerData.sortOrder === undefined) {
-      bannerData.sortOrder = bannerData.order;
+    const payload: any = { ...data };
+    if (payload.order !== undefined && payload.sortOrder === undefined) {
+      payload.sortOrder = payload.order;
+    } else if (payload.sortOrder !== undefined && payload.order === undefined) {
+      payload.order = payload.sortOrder;
     }
-    return await Banner.findByIdAndUpdate(id, bannerData, { new: true });
+    return await Banner.findByIdAndUpdate(id, payload, { new: true });
   }
 
   static async deleteBanner(id: string): Promise<boolean> {

@@ -2,16 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #F0EEE7;
-  color: #1B1F22;
-  font-family: 'Barlow', sans-serif;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  body {
+    background-color: #F8FAFC;
+    color: #111827;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Manrope', 'Inter', sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  :focus-visible {
+    outline: 2px solid #B91C1C;
+    outline-offset: 2px;
+  }
 }
 
-.font-display { font-family: 'Barlow Condensed', sans-serif; }
-
-.hazard-strip {
-  background: repeating-linear-gradient(135deg, #B3261E, #B3261E 10px, #D98E27 10px, #D98E27 20px);
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
-:focus-visible { outline: 2px solid #B3261E; outline-offset: 2px; }
+/* Subtly animated badge or pulsing glow for emergency / live statuses */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

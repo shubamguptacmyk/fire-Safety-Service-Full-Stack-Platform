@@ -39,13 +39,27 @@ const uploadDoc = multer({
 router.post(
   "/image",
   requireAuth,
-  requirePermission("products.create"),
+  (req: Request, _res: Response, next: import("express").NextFunction) => {
+    if (!req.user) return next(ApiError.unauthorized());
+    const isStaff =
+      req.user.role === "super_admin" ||
+      req.user.role === "admin" ||
+      req.user.permissions?.includes("products.create") ||
+      req.user.permissions?.includes("blog.manage") ||
+      req.user.permissions?.includes("settings.manage") ||
+      req.user.permissions?.includes("gallery.manage");
+    if (!isStaff) {
+      return next(ApiError.forbidden("Insufficient permissions to upload images"));
+    }
+    next();
+  },
   uploadImage.single("file"),
   asyncHandler(async (req: Request, res: Response) => {
     if (!req.file) {
       throw ApiError.badRequest("No image file uploaded");
     }
-    const result = await uploadService.uploadFile(req.file, "products");
+    const folder = (req.body?.folder as string) || (req.query?.folder as string) || "products";
+    const result = await uploadService.uploadFile(req.file, folder);
     return sendSuccess(res, 200, "Image uploaded successfully", result);
   })
 );

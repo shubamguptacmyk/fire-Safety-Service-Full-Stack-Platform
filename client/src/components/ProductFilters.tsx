@@ -1,6 +1,7 @@
 import React from "react";
 import { FilterOptions, ProductQueryParams } from "@/types";
-import { Filter, X, RotateCcw } from "lucide-react";
+import { Filter, X, RotateCcw, Check } from "lucide-react";
+import Button from "./ui/Button";
 
 interface ProductFiltersProps {
   filterOptions?: FilterOptions;
@@ -33,6 +34,17 @@ export default function ProductFilters({
     setMaxPriceInput(selectedParams.maxPrice?.toString() || "");
   }, [selectedParams.minPrice, selectedParams.maxPrice]);
 
+  React.useEffect(() => {
+    if (isMobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileOpen]);
+
   function handlePriceApply(e: React.FormEvent) {
     e.preventDefault();
     onChange({
@@ -59,82 +71,92 @@ export default function ProductFilters({
   }
 
   const content = (
-    <div className="space-y-6">
+    <div className="space-y-6 text-xs">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-black/10">
+      <div className="flex items-center justify-between pb-3.5 border-b border-slate-200">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-brand" />
-          <h2 className="font-semibold text-sm text-ink uppercase tracking-wider">Filters</h2>
+          <Filter className="w-4 h-4 text-primary-700" />
+          <h3 className="font-bold text-sm font-display text-dark uppercase tracking-wider">
+            Filter Catalog
+          </h3>
         </div>
         <button
           onClick={onReset}
-          className="text-xs text-steel hover:text-brand flex items-center gap-1 transition-colors"
+          className="text-xs text-slate-500 hover:text-primary-700 flex items-center gap-1 transition-colors font-medium"
         >
-          <RotateCcw className="w-3 h-3" /> Reset
+          <RotateCcw className="w-3 h-3" />
+          <span>Reset All</span>
         </button>
       </div>
 
       {/* Categories */}
       {filterOptions?.categories && filterOptions.categories.length > 0 && (
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-ink/70 mb-2.5">Category</h3>
-          <div className="space-y-1 text-sm">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+            Equipment Category
+          </h4>
+          <div className="space-y-1">
             <button
               onClick={() => onChange({ category: undefined, page: 1 })}
-              className={`w-full text-left px-2.5 py-1.5 rounded text-xs transition-colors ${
+              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-between ${
                 !selectedParams.category
-                  ? "bg-brand text-white font-medium"
-                  : "text-ink/80 hover:bg-black/5"
+                  ? "bg-primary-700 text-white shadow-2xs"
+                  : "text-slate-700 hover:bg-slate-100"
               }`}
             >
-              All Categories
+              <span>All Categories</span>
+              {!selectedParams.category && <Check className="w-3.5 h-3.5" />}
             </button>
-            {filterOptions.categories.map((cat) => (
-              <button
-                key={cat.slug}
-                onClick={() => onChange({ category: cat.slug, page: 1 })}
-                className={`w-full text-left px-2.5 py-1.5 rounded text-xs transition-colors ${
-                  selectedParams.category === cat.slug
-                    ? "bg-brand text-white font-medium"
-                    : "text-ink/80 hover:bg-black/5"
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {filterOptions.categories.map((cat) => {
+              const isSelected = selectedParams.category === cat.slug;
+              return (
+                <button
+                  key={cat.slug}
+                  onClick={() => onChange({ category: cat.slug, page: 1 })}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-between ${
+                    isSelected
+                      ? "bg-primary-700 text-white shadow-2xs"
+                      : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  <span className="truncate">{cat.name}</span>
+                  {isSelected && <Check className="w-3.5 h-3.5" />}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* Price Range */}
       <div>
-        <h3 className="text-xs font-bold uppercase tracking-wider text-ink/70 mb-2.5">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
           Price Range (₹)
-        </h3>
-        <form onSubmit={handlePriceApply} className="space-y-2">
+        </h4>
+        <form onSubmit={handlePriceApply} className="space-y-2.5">
           <div className="grid grid-cols-2 gap-2">
             <input
               type="number"
-              placeholder="Min"
+              placeholder="Min ₹"
               min="0"
               value={minPriceInput}
               onChange={(e) => setMinPriceInput(e.target.value)}
-              className="w-full px-2.5 py-1.5 border border-black/10 rounded text-xs focus:border-brand outline-none"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-dark placeholder:text-slate-400 focus:border-primary-600 focus:ring-1 focus:ring-primary-600 outline-none transition-colors"
             />
             <input
               type="number"
-              placeholder="Max"
+              placeholder="Max ₹"
               min="0"
               value={maxPriceInput}
               onChange={(e) => setMaxPriceInput(e.target.value)}
-              className="w-full px-2.5 py-1.5 border border-black/10 rounded text-xs focus:border-brand outline-none"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-dark placeholder:text-slate-400 focus:border-primary-600 focus:ring-1 focus:ring-primary-600 outline-none transition-colors"
             />
           </div>
           <button
             type="submit"
-            className="w-full py-1.5 bg-paper hover:bg-gray-200 border border-black/10 text-ink text-xs font-medium rounded transition-colors"
+            className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-dark font-bold text-xs rounded-lg transition-colors border border-slate-200"
           >
-            Apply Price
+            Apply Price Filter
           </button>
         </form>
       </div>
@@ -142,24 +164,27 @@ export default function ProductFilters({
       {/* Fire Classes */}
       {filterOptions?.fireClasses && filterOptions.fireClasses.length > 0 && (
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-ink/70 mb-2.5">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
             Fire Hazard Class
-          </h3>
+          </h4>
           <div className="flex flex-wrap gap-1.5">
-            {filterOptions.fireClasses.map((fc) => (
-              <button
-                key={fc}
-                type="button"
-                onClick={() => handleFireClassToggle(fc)}
-                className={`px-2 py-1 rounded text-xs transition-all ${
-                  selectedParams.fireClass === fc
-                    ? "bg-brand text-white font-semibold shadow-sm"
-                    : "bg-paper text-ink/70 hover:bg-black/5 border border-black/10"
-                }`}
-              >
-                {fc}
-              </button>
-            ))}
+            {filterOptions.fireClasses.map((fc) => {
+              const isSelected = selectedParams.fireClass === fc;
+              return (
+                <button
+                  key={fc}
+                  type="button"
+                  onClick={() => handleFireClassToggle(fc)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    isSelected
+                      ? "bg-primary-700 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
+                  }`}
+                >
+                  Class {fc}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -167,18 +192,20 @@ export default function ProductFilters({
       {/* Brands */}
       {filterOptions?.brands && filterOptions.brands.length > 0 && (
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-ink/70 mb-2.5">Brand</h3>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+            Manufacturer / Brand
+          </h4>
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {filterOptions.brands.map((b) => (
               <label
                 key={b}
-                className="flex items-center gap-2 text-xs text-ink/80 cursor-pointer hover:text-ink"
+                className="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer hover:text-dark font-medium"
               >
                 <input
                   type="checkbox"
                   checked={selectedParams.brand === b}
                   onChange={() => handleBrandToggle(b)}
-                  className="rounded border-gray-300 text-brand focus:ring-brand"
+                  className="rounded border-slate-300 text-primary-700 focus:ring-primary-600 w-4 h-4"
                 />
                 <span>{b}</span>
               </label>
@@ -188,14 +215,14 @@ export default function ProductFilters({
       )}
 
       {/* In-Stock Toggle */}
-      <div className="pt-2 border-t border-black/10">
-        <label className="flex items-center justify-between text-xs text-ink font-medium cursor-pointer">
+      <div className="pt-3 border-t border-slate-200">
+        <label className="flex items-center justify-between text-xs text-dark font-semibold cursor-pointer">
           <span>In Stock Only</span>
           <input
             type="checkbox"
             checked={selectedParams.inStock === true}
             onChange={(e) => onChange({ inStock: e.target.checked || undefined, page: 1 })}
-            className="rounded border-gray-300 text-brand focus:ring-brand"
+            className="rounded border-slate-300 text-primary-700 focus:ring-primary-600 w-4 h-4"
           />
         </label>
       </div>
@@ -205,37 +232,44 @@ export default function ProductFilters({
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:block w-64 shrink-0 bg-white p-5 rounded-lg border border-black/10 h-fit ${className}`}>
+      <aside
+        className={`hidden md:block w-64 shrink-0 bg-white p-6 rounded-2xl border border-slate-200/90 shadow-card h-fit ${className}`}
+      >
         {content}
       </aside>
 
       {/* Mobile Drawer */}
       {isMobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
+        <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in">
           <div
-            className="fixed inset-0 bg-ink/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-dark/60 backdrop-blur-2xs"
             onClick={onCloseMobile}
             aria-hidden="true"
           />
-          <div className="relative ml-auto w-80 max-w-full h-full bg-white p-5 overflow-y-auto shadow-2xl z-10 flex flex-col">
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-black/10">
-              <span className="font-bold text-base">Filter Catalog</span>
-              <button
-                onClick={onCloseMobile}
-                className="p-1.5 text-steel hover:text-ink rounded"
-                aria-label="Close filters"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          <div className="relative ml-auto w-full max-w-xs sm:w-80 h-full bg-white p-4 sm:p-6 overflow-y-auto shadow-2xl z-10 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-200">
+                <span className="font-bold text-base font-display text-dark">Filter Equipment</span>
+                <button
+                  onClick={onCloseMobile}
+                  className="p-1.5 text-slate-400 hover:text-dark hover:bg-slate-100 rounded-lg transition-colors"
+                  aria-label="Close filters"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div>{content}</div>
             </div>
-            <div className="flex-1">{content}</div>
-            <div className="pt-4 border-t border-black/10 mt-6">
-              <button
+
+            <div className="pt-6 border-t border-slate-200 mt-6">
+              <Button
+                variant="primary"
+                size="md"
+                className="w-full"
                 onClick={onCloseMobile}
-                className="w-full py-2.5 bg-brand text-white font-semibold text-sm rounded shadow-sm hover:bg-brand-dark"
               >
-                Show Results
-              </button>
+                Apply Filters &amp; View Results
+              </Button>
             </div>
           </div>
         </div>

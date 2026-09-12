@@ -1,14 +1,20 @@
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { productService } from "@/services/productService";
 import { categoryService } from "@/services/categoryService";
+import { bannerService } from "@/services/bannerService";
 import { ProductQueryParams } from "@/types";
 import ProductCard from "@/components/ProductCard";
 import ProductFilters from "@/components/ProductFilters";
-import PromoBanner from "@/components/PromoBanner";
 import Seo from "@/components/Seo";
-import { SlidersHorizontal, PackageOpen, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Pagination from "@/components/ui/Pagination";
+import { ProductCardSkeleton } from "@/components/ui/LoadingSkeleton";
+import EmptyState from "@/components/ui/EmptyState";
+import ErrorState from "@/components/ui/ErrorState";
+import Button from "@/components/ui/Button";
+import { SlidersHorizontal, PackageOpen, ArrowRight, ShieldCheck } from "lucide-react";
 
 export default function Products() {
   const { category: categoryParam } = useParams<{ category?: string }>();
@@ -40,34 +46,42 @@ export default function Products() {
     }));
   }, [categoryParam]);
 
-  // Fetch products with React Query
+  // Fetch products
   const {
     data: productData,
     isLoading: isProductsLoading,
     isError: isProductsError,
+    refetch: refetchProducts,
   } = useQuery({
     queryKey: ["products", filters],
     queryFn: () => productService.getProducts(filters),
   });
 
-  // Fetch filter options (categories, brands, fireClasses, etc.)
+  // Fetch filter options
   const { data: filterOptions } = useQuery({
     queryKey: ["product-filter-options"],
     queryFn: () => productService.getFilterOptions(),
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch active category details if browsing by category
+  // Fetch active category details
   const { data: currentCategory } = useQuery({
     queryKey: ["category-detail", categoryParam],
     queryFn: () => (categoryParam ? categoryService.getBySlug(categoryParam) : null),
     enabled: Boolean(categoryParam),
   });
 
+  // Fetch dynamic category top banner
+  const { data: categoryBanners } = useQuery({
+    queryKey: ["category-banners"],
+    queryFn: () => bannerService.getActiveBanners("category_top"),
+    staleTime: 5 * 60 * 1000,
+  });
+  const categoryTopBanner = categoryBanners?.[0];
+
   function handleFilterChange(newValues: Partial<ProductQueryParams>) {
     setFilters((prev) => {
       const next = { ...prev, ...newValues };
-      // Sync to URL search params
       const sp = new URLSearchParams();
       if (next.page && next.page > 1) sp.set("page", next.page.toString());
       if (next.brand) sp.set("brand", next.brand);
@@ -98,8 +112,8 @@ export default function Products() {
   const total = productData?.meta?.total || 0;
 
   const pageTitle = currentCategory
-    ? `${currentCategory.name} — AK Fire Safety Service`
-    : "Fire Safety Equipment & Products Catalog — AK Fire Safety";
+    ? `${currentCategory.name} — Shubam Fire Protection`
+    : "Industrial Fire Safety Equipment Catalog — Shubam Fire Protection";
 
   return (
     <>
@@ -107,27 +121,56 @@ export default function Products() {
         title={pageTitle}
         description={
           currentCategory?.description ||
-          "Browse ISI-certified fire extinguishers, hydrant valves, smoke detectors, alarm panels, and fire suppression systems in Navi Mumbai."
+          "Explore ISI-certified fire extinguishers, hydrant valves, smoke detectors, alarm panels, and automatic suppression systems by Shubam Fire Protection."
         }
       />
 
-      {/* Hero / Header Banner */}
-      <section className="bg-ink text-white py-8 border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-xs uppercase tracking-wider text-amber font-semibold mb-1">
-            Navi Mumbai · Commercial & Industrial Fire Protection
+      {/* Header Banner */}
+      <section className="bg-dark text-white py-10 sm:py-12 border-b border-slate-800 relative overflow-hidden">
+        <div className="absolute -top-24 -right-24 w-80 h-80 bg-primary-700/15 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="mb-4">
+            <Breadcrumb
+              items={[
+                { label: "Products", href: "/products" },
+                ...(currentCategory ? [{ label: currentCategory.name }] : []),
+              ]}
+              className="text-slate-400"
+            />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold">
-            {currentCategory ? currentCategory.name : "Product Catalog"}
-          </h1>
-          <p className="text-white/70 text-sm mt-1 max-w-2xl">
-            {currentCategory?.description ||
-              "Explore our complete inventory of BIS-approved fire fighting equipment, suppression systems, and certified detection components."}
-          </p>
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-orange-400 text-xs font-bold uppercase tracking-wider mb-3">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>BIS ISI &bull; IS 15683 &amp; IS 2190 Certified</span>
+              </div>
+              <h1 className="text-2xl sm:text-4xl font-extrabold font-display tracking-tight text-white">
+                {currentCategory ? currentCategory.name : "Fire Safety Equipment Catalog"}
+              </h1>
+              <p className="text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed">
+                {currentCategory?.description ||
+                  "Direct manufacturer distribution of ISI-marked extinguishers, hydrant systems, clean agent gas suppression, and emergency detection gear."}
+              </p>
+            </div>
+
+            <div className="shrink-0">
+              <Link to="/request-quote">
+                <Button
+                  variant="primary"
+                  size="md"
+                  rightIcon={<ArrowRight className="w-4 h-4" />}
+                >
+                  Request Bulk Quote
+                </Button>
+              </Link>
+            </div>
+          </div>
 
           {/* Subcategories Pills */}
           {currentCategory?.subcategories && currentCategory.subcategories.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
+            <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-slate-800">
               {currentCategory.subcategories.map((sub) => (
                 <button
                   key={sub.slug}
@@ -137,10 +180,10 @@ export default function Products() {
                       page: 1,
                     })
                   }
-                  className={`text-xs px-3 py-1 rounded-full transition-colors ${
+                  className={`text-xs px-3.5 py-1.5 rounded-full font-semibold transition-colors ${
                     filters.subcategory === sub.name
-                      ? "bg-amber text-ink font-bold shadow-sm"
-                      : "bg-white/10 hover:bg-white/20 text-white/90"
+                      ? "bg-primary-700 text-white shadow-xs"
+                      : "bg-white/10 hover:bg-white/20 text-slate-300"
                   }`}
                 >
                   {sub.name}
@@ -151,39 +194,63 @@ export default function Products() {
         </div>
       </section>
 
-      {/* Optional Admin-controlled Category Banner */}
-      <PromoBanner position="category_top" className="!py-4" />
+      {/* Dynamic Category Top Banner if present */}
+      {categoryTopBanner && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+          <div className="relative rounded-2xl overflow-hidden shadow-card border border-slate-200 aspect-[21/6] group">
+            <img
+              src={categoryTopBanner.image}
+              alt={categoryTopBanner.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-dark/90 via-dark/40 to-transparent flex flex-col justify-center p-6 sm:p-10 text-white max-w-lg">
+              <span className="text-[10px] uppercase tracking-wider text-orange-400 font-bold mb-1">
+                Special Catalog Notice
+              </span>
+              <h3 className="text-xl sm:text-2xl font-bold font-display leading-tight">
+                {categoryTopBanner.title}
+              </h3>
+              {categoryTopBanner.subtitle && (
+                <p className="text-slate-300 text-xs mt-1 line-clamp-2">
+                  {categoryTopBanner.subtitle}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Main Catalog Section */}
-      <section className="max-w-6xl mx-auto px-4 py-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         {/* Top Control Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 mb-6 border-b border-black/10">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-5 mb-8 border-b border-slate-200">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setIsMobileFiltersOpen(true)}
-              className="md:hidden flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-black/10 rounded text-xs font-semibold text-ink"
+              className="md:hidden flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-dark shadow-2xs"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-brand" /> Filters
+              <SlidersHorizontal className="w-3.5 h-3.5 text-primary-700" />
+              <span>Filters</span>
             </button>
-            <span className="text-xs sm:text-sm text-steel">
-              Showing <strong className="text-ink">{productData?.products.length || 0}</strong> of{" "}
-              <strong className="text-ink">{total}</strong> items
+            <span className="text-xs sm:text-sm text-slate-500">
+              Showing <strong className="text-dark font-bold">{productData?.products.length || 0}</strong> of{" "}
+              <strong className="text-dark font-bold">{total}</strong> certified items
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="sort-select" className="text-xs text-steel font-medium">
+          <div className="flex items-center gap-2.5">
+            <label htmlFor="sort-select" className="text-xs text-slate-500 font-semibold">
               Sort by:
             </label>
             <select
               id="sort-select"
               value={filters.sort || "newest"}
               onChange={(e) => handleFilterChange({ sort: e.target.value as any, page: 1 })}
-              className="px-2.5 py-1.5 bg-white border border-black/10 rounded text-xs text-ink font-medium focus:border-brand outline-none"
+              className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-dark font-semibold focus:border-primary-600 focus:ring-1 focus:ring-primary-600 outline-none shadow-2xs transition-colors"
             >
               <option value="newest">Newest First</option>
               <option value="bestseller">Best Sellers</option>
-              <option value="featured">Featured First</option>
+              <option value="featured">Featured Gear</option>
               <option value="price_asc">Price: Low to High</option>
               <option value="price_desc">Price: High to Low</option>
               <option value="name_asc">Alphabetical (A-Z)</option>
@@ -204,90 +271,44 @@ export default function Products() {
 
           <div className="flex-1 min-w-0">
             {isProductsLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, idx) => (
-                  <div
-                    key={idx}
-                    className="h-80 bg-white border border-black/10 rounded-lg p-4 animate-pulse flex flex-col justify-between"
-                  >
-                    <div className="w-full h-44 bg-slate-100 rounded" />
-                    <div className="space-y-2 mt-4">
-                      <div className="h-4 bg-slate-100 rounded w-3/4" />
-                      <div className="h-3 bg-slate-100 rounded w-1/2" />
-                    </div>
-                    <div className="h-8 bg-slate-100 rounded mt-4" />
-                  </div>
+                  <ProductCardSkeleton key={idx} />
                 ))}
               </div>
             ) : isProductsError ? (
-              <div className="p-8 text-center bg-red-50 border border-red-200 rounded-lg text-red-800">
-                <p className="font-semibold text-sm">Failed to load products.</p>
-                <button
-                  onClick={() => handleFilterChange({})}
-                  className="mt-2 text-xs font-semibold text-red-700 underline"
-                >
-                  Try again
-                </button>
-              </div>
+              <ErrorState
+                title="Failed to Load Products"
+                message="We encountered an issue loading safety equipment. Please try again."
+                onRetry={() => refetchProducts()}
+              />
             ) : productData?.products.length === 0 ? (
-              <div className="p-12 text-center bg-white border border-black/10 rounded-lg">
-                <PackageOpen className="w-12 h-12 text-steel/50 mx-auto mb-3" />
-                <h3 className="font-display font-semibold text-lg text-ink">No Products Found</h3>
-                <p className="text-steel text-xs sm:text-sm mt-1 max-w-sm mx-auto">
-                  No fire safety equipment matches your selected filters or search terms.
-                </p>
-                <button
-                  onClick={handleResetFilters}
-                  className="mt-4 px-4 py-2 bg-brand text-white text-xs font-semibold rounded hover:bg-brand-dark transition-colors"
-                >
-                  Reset All Filters
-                </button>
-              </div>
+              <EmptyState
+                icon={<PackageOpen className="w-10 h-10 text-slate-400" />}
+                title="No Products Match Your Criteria"
+                description="Try clearing some of your selected filters, adjusting the price range, or searching with broader keywords."
+                action={
+                  <Button variant="primary" size="sm" onClick={handleResetFilters}>
+                    Reset All Filters
+                  </Button>
+                }
+              />
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {productData?.products.map((p) => (
                     <ProductCard key={p._id} product={p} />
                   ))}
                 </div>
 
                 {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className="mt-10 flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => handleFilterChange({ page: Math.max(1, page - 1) })}
-                      disabled={page <= 1}
-                      className="p-2 border border-black/10 rounded bg-white text-ink text-xs disabled:opacity-40 disabled:cursor-not-allowed hover:bg-paper"
-                      aria-label="Previous page"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    {Array.from({ length: totalPages }).map((_, i) => {
-                      const pageNum = i + 1;
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => handleFilterChange({ page: pageNum })}
-                          className={`w-8 h-8 rounded text-xs font-semibold transition-colors ${
-                            pageNum === page
-                              ? "bg-brand text-white"
-                              : "bg-white border border-black/10 text-ink hover:bg-paper"
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                    <button
-                      onClick={() => handleFilterChange({ page: Math.min(totalPages, page + 1) })}
-                      disabled={page >= totalPages}
-                      className="p-2 border border-black/10 rounded bg-white text-ink text-xs disabled:opacity-40 disabled:cursor-not-allowed hover:bg-paper"
-                      aria-label="Next page"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+                <div className="mt-12">
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={(p) => handleFilterChange({ page: p })}
+                  />
+                </div>
               </>
             )}
           </div>

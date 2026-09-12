@@ -8,7 +8,6 @@ const router = Router();
 
 // Public: Get reviews for a specific product
 router.get("/product/:productId", reviewController.getProductReviews);
-router.get("/recent", reviewController.getRecentApprovedReviews);
 
 // Customer endpoints
 router.post("/", requireAuth, validateBody(createReviewSchema), reviewController.createReview);

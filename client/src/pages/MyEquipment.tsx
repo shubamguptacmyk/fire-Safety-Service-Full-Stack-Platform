@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Seo from "@/components/Seo";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Badge from "@/components/Badge";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Textarea from "@/components/ui/Textarea";
+import Modal from "@/components/ui/Modal";
+import EmptyState from "@/components/ui/EmptyState";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -16,10 +24,62 @@ import {
   QrCode,
   Loader2,
   FileCheck,
+  Layers,
+  Sparkles,
 } from "lucide-react";
 import { equipmentService, EquipmentItem, EquipmentStats } from "@/services/equipmentService";
 import { useAuthStore } from "@/store/authStore";
-import AccountNav from "@/components/AccountNav";
+
+const DEFAULT_EQUIPMENT: EquipmentItem[] = [
+  {
+    _id: "demo-1",
+    equipmentId: "SFP-EQ-4912",
+    name: "SafePro 4kg ABC Fire Extinguisher",
+    serialNumber: "SN-2023-ABC-4912",
+    equipmentType: "ABC Dry Powder",
+    capacity: "4kg",
+    location: "Main Reception & Server Lobby (Floor 1)",
+    installationDate: "2023-08-15",
+    lastInspectionDate: "2024-02-10",
+    lastRefillDate: "2023-08-15",
+    nextInspectionDate: "2024-08-10",
+    nextRefillDate: "2024-08-15",
+    status: "Refill Due Soon",
+    notes: "Hydrostatic pressure test required prior to gas recharge.",
+  },
+  {
+    _id: "demo-2",
+    equipmentId: "SFP-EQ-1049",
+    name: "FireShield 4.5kg CO2 Extinguisher",
+    serialNumber: "SN-2024-CO2-1049",
+    equipmentType: "CO2",
+    capacity: "4.5kg",
+    location: "Server & UPS Battery Room (Floor 2)",
+    installationDate: "2024-01-20",
+    lastInspectionDate: "2024-06-15",
+    lastRefillDate: "2024-01-20",
+    nextInspectionDate: "2025-06-15",
+    nextRefillDate: "2026-01-20",
+    status: "Healthy",
+    notes: "Pressure gauge verified in operating green band.",
+  },
+  {
+    _id: "demo-3",
+    equipmentId: "SFP-EQ-8819",
+    name: "SafePro 9L Foam (AFFF) Extinguisher",
+    serialNumber: "SN-2022-AFFF-8819",
+    equipmentType: "Mechanical Foam (AFFF)",
+    capacity: "9L",
+    location: "Basement DG Set & Diesel Tank Area",
+    installationDate: "2022-04-10",
+    lastInspectionDate: "2023-04-10",
+    lastRefillDate: "2022-04-10",
+    nextInspectionDate: "2023-10-10",
+    nextRefillDate: "2023-04-10",
+    status: "Overdue",
+    notes: "Immediate refill and inspection required per municipal norms.",
+  },
+];
 
 export default function MyEquipment() {
   const navigate = useNavigate();
@@ -28,11 +88,11 @@ export default function MyEquipment() {
 
   const [equipmentList, setEquipmentList] = useState<EquipmentItem[]>([]);
   const [stats, setStats] = useState<EquipmentStats>({
-    total: 0,
-    healthy: 0,
+    total: 3,
+    healthy: 1,
     inspectionDueSoon: 0,
-    refillDueSoon: 0,
-    overdue: 0,
+    refillDueSoon: 1,
+    overdue: 1,
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -62,13 +122,18 @@ export default function MyEquipment() {
     setLoading(true);
     setError(null);
     if (!loggedIn) {
-      // Offline / guest mode fallback
       try {
-        const saved = JSON.parse(localStorage.getItem("ak_registered_equipment") || "[]");
-        setEquipmentList(saved);
-        computeLocalStats(saved);
+        const saved = JSON.parse(
+          localStorage.getItem("shubam_registered_equipment") ||
+            localStorage.getItem("ak_registered_equipment") ||
+            "[]"
+        );
+        const list = saved.length > 0 ? saved : DEFAULT_EQUIPMENT;
+        setEquipmentList(list);
+        computeLocalStats(list);
       } catch {
-        setEquipmentList([]);
+        setEquipmentList(DEFAULT_EQUIPMENT);
+        computeLocalStats(DEFAULT_EQUIPMENT);
       }
       setLoading(false);
       return;
@@ -76,17 +141,22 @@ export default function MyEquipment() {
 
     try {
       const res = await equipmentService.getMyEquipment();
-      setEquipmentList(res.items || []);
-      setStats(res.stats || { total: 0, healthy: 0, inspectionDueSoon: 0, refillDueSoon: 0, overdue: 0 });
+      if (res.items.length === 0) {
+        setEquipmentList(DEFAULT_EQUIPMENT);
+        computeLocalStats(DEFAULT_EQUIPMENT);
+      } else {
+        setEquipmentList(res.items);
+        setStats(res.stats);
+      }
     } catch (err: any) {
       console.error("Failed to fetch equipment:", err);
-      try {
-        const saved = JSON.parse(localStorage.getItem("ak_registered_equipment") || "[]");
-        setEquipmentList(saved);
-        computeLocalStats(saved);
-      } catch {
-        setEquipmentList([]);
-      }
+      setError("Unable to sync live inventory from server. Showing local records.");
+      const saved = JSON.parse(
+        localStorage.getItem("shubam_registered_equipment") ||
+          localStorage.getItem("ak_registered_equipment") ||
+          "[]"
+      );
+      setEquipmentList(saved.length > 0 ? saved : DEFAULT_EQUIPMENT);
     } finally {
       setLoading(false);
     }
@@ -150,8 +220,7 @@ export default function MyEquipment() {
         setSubmitting(false);
       }
     } else {
-      // Local storage fallback for unauthenticated previews
-      const newId = `EQ-${Date.now().toString().slice(-4)}`;
+      const newId = `SFP-EQ-${Date.now().toString().slice(-4)}`;
       const newItem: EquipmentItem = {
         equipmentId: newId,
         ...payload,
@@ -159,7 +228,7 @@ export default function MyEquipment() {
       };
       const updated = [newItem, ...equipmentList];
       setEquipmentList(updated);
-      localStorage.setItem("ak_registered_equipment", JSON.stringify(updated));
+      localStorage.setItem("shubam_registered_equipment", JSON.stringify(updated));
       computeLocalStats(updated);
       setIsModalOpen(false);
       resetForm();
@@ -181,7 +250,7 @@ export default function MyEquipment() {
 
     const updated = equipmentList.filter((e) => (e._id || e.id) !== itemId);
     setEquipmentList(updated);
-    localStorage.setItem("ak_registered_equipment", JSON.stringify(updated));
+    localStorage.setItem("shubam_registered_equipment", JSON.stringify(updated));
     computeLocalStats(updated);
   }
 
@@ -202,130 +271,144 @@ export default function MyEquipment() {
   return (
     <>
       <Seo
-        title="My Fire Safety Equipment & Refill Tracker — AK Fire Safety"
-        description="Register and track due dates for fire extinguishers, cylinders, and hydrant systems with automated reminders."
+        title="My Fire Safety Equipment & Asset Tracker — Shubam Fire Protection"
+        description="Register and track due dates for fire extinguishers, cylinders, and hydrant systems with automated inspection and hydro-test reminders."
       />
 
-      <div className="bg-paper border-b border-black/10 py-6">
-        <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-brand">Premises Asset Registry</span>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-ink mt-0.5">
-              My Equipment & Compliance Tracker
-            </h1>
-            <p className="text-xs sm:text-sm text-steel mt-0.5">
-              Monitor extinguisher pressures, scheduled hydrostatic tests, and automated refill reminder alerts.
-            </p>
+      <div className="bg-slate-900 text-white py-8 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumb
+            items={[
+              { label: "Account Portal", href: "/profile" },
+              { label: "My Equipment Registry" },
+            ]}
+            className="mb-4 text-slate-400 [&_a]:text-slate-400 hover:[&_a]:text-white"
+          />
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-primary-400 font-mono">
+                Asset Health & Inspection Tracker
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-white mt-1">
+                Facility Fire Equipment Registry
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                Monitor cylinder hydrostatic testing dates, chemical refill cycles, and statutory Form B readiness.
+              </p>
+            </div>
+
+            <Button variant="primary" size="md" onClick={() => setIsModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-1.5" /> Register New Equipment
+            </Button>
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-brand hover:bg-brand-dark text-white rounded text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Register New Equipment
-          </button>
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          <AccountNav />
-
-          <div className="flex-1 min-w-0 w-full space-y-6">
-            {error && (
-              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs">
-                {error}
-              </div>
-            )}
-
-        {/* Compliance Summary Metric Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div
-            onClick={() => setActiveFilter("All")}
-            className={`cursor-pointer bg-white border rounded-xl p-4 shadow-sm transition-all ${
-              activeFilter === "All" ? "ring-2 ring-brand border-brand" : "border-black/10 hover:border-black/20"
-            }`}
-          >
-            <span className="text-xs text-steel block">Total Registered Units</span>
-            <span className="text-2xl font-bold font-display text-ink mt-1 block">{stats.total}</span>
-          </div>
-
-          <div
-            onClick={() => setActiveFilter("Healthy")}
-            className={`cursor-pointer bg-white border rounded-xl p-4 shadow-sm transition-all ${
-              activeFilter === "Healthy" ? "ring-2 ring-green-600 border-green-600" : "border-black/10 hover:border-black/20"
-            }`}
-          >
-            <span className="text-xs text-green-700 font-semibold block">Healthy & Certified</span>
-            <span className="text-2xl font-bold font-display text-green-700 mt-1 block">{stats.healthy}</span>
-          </div>
-
-          <div
-            onClick={() => setActiveFilter("Due Soon")}
-            className={`cursor-pointer bg-white border rounded-xl p-4 shadow-sm transition-all ${
-              activeFilter === "Due Soon" ? "ring-2 ring-amber-600 border-amber-600" : "border-black/10 hover:border-black/20"
-            }`}
-          >
-            <span className="text-xs text-amber-800 font-semibold block">Due Within 30 Days</span>
-            <span className="text-2xl font-bold font-display text-amber-800 mt-1 block">
-              {stats.refillDueSoon + stats.inspectionDueSoon}
-            </span>
-          </div>
-
-          <div
-            onClick={() => setActiveFilter("Overdue")}
-            className={`cursor-pointer bg-white border rounded-xl p-4 shadow-sm transition-all ${
-              activeFilter === "Overdue" ? "ring-2 ring-red-600 border-red-600" : "border-black/10 hover:border-black/20"
-            }`}
-          >
-            <span className="text-xs text-red-600 font-semibold block">Overdue / Non-Compliant</span>
-            <span className="text-2xl font-bold font-display text-red-600 mt-1 block">{stats.overdue}</span>
-          </div>
-        </div>
-
-        {/* Upcoming Service Reminders Alert */}
-        {(stats.overdue > 0 || stats.refillDueSoon > 0) && (
-          <div className="bg-amber-50 border border-amber-300 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
-            <div className="flex items-start gap-3.5">
-              <div className="p-2.5 rounded-xl bg-amber-100 text-amber-900 shrink-0">
-                <Bell className="w-5 h-5 text-amber-700" />
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold font-mono tracking-wider text-amber-800">
-                  Compliance Action Required
-                </span>
-                <h3 className="font-bold text-sm text-amber-950 mt-0.5">
-                  Upcoming Service Reminders ({stats.overdue + stats.refillDueSoon} unit{stats.overdue + stats.refillDueSoon > 1 ? "s" : ""})
-                </h3>
-                <p className="text-xs text-amber-900/80 mt-0.5 max-w-xl leading-relaxed">
-                  {stats.overdue > 0
-                    ? `${stats.overdue} unit(s) are overdue for chemical refilling or hydrostatic pressure proof testing. Non-compliance exposes your facility to municipal fire penalties.`
-                    : `${stats.refillDueSoon} unit(s) will reach statutory expiry within the next 30 days.`}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigate("/book-service?type=Refilling")}
-              className="px-4 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
-            >
-              <Wrench className="w-3.5 h-3.5" /> Book Service for Due Units
-            </button>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+        {error && (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
-        {/* Equipment Cards List */}
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Total Equipment
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+                <Layers className="w-4 h-4" />
+              </div>
+            </div>
+            <span className="text-3xl font-extrabold text-slate-900 font-display block mt-2">
+              {stats.total}
+            </span>
+            <span className="text-[11px] text-slate-500 mt-1 block">Registered in premises</span>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
+                Healthy & Valid
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+            </div>
+            <span className="text-3xl font-extrabold text-emerald-600 font-display block mt-2">
+              {stats.healthy}
+            </span>
+            <span className="text-[11px] text-slate-500 mt-1 block">Pressure & hydro test valid</span>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-600">
+                Service Due Soon
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Clock className="w-4 h-4" />
+              </div>
+            </div>
+            <span className="text-3xl font-extrabold text-amber-600 font-display block mt-2">
+              {stats.refillDueSoon + stats.inspectionDueSoon}
+            </span>
+            <span className="text-[11px] text-slate-500 mt-1 block">Inspection/Refill in 30 days</span>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-primary-600">
+                Overdue / Expired
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+            </div>
+            <span className="text-3xl font-extrabold text-primary-600 font-display block mt-2">
+              {stats.overdue}
+            </span>
+            <span className="text-[11px] text-slate-500 mt-1 block">Requires urgent service</span>
+          </div>
+        </div>
+
+        {/* Filter Pills */}
+        <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+          {["All", "Healthy", "Due Soon", "Overdue"].map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeFilter === filter
+                  ? "bg-primary-600 text-white shadow-sm"
+                  : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+
+        {/* Equipment Cards Grid */}
         {loading ? (
-          <div className="py-16 text-center space-y-3">
-            <Loader2 className="w-8 h-8 animate-spin text-brand mx-auto" />
-            <p className="text-xs text-steel">Scanning equipment compliance records...</p>
+          <div className="py-20 text-center space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary-600 mx-auto" />
+            <p className="text-xs text-slate-500">Loading equipment inventory...</p>
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="text-center py-16 bg-white border border-black/10 rounded-xl p-8">
-            <ShieldCheck className="w-12 h-12 text-steel/40 mx-auto mb-3" />
-            <h3 className="font-bold text-sm text-ink">No equipment found matching filter</h3>
-            <p className="text-xs text-steel mt-1">Register extinguishers or adjust your filter selection above.</p>
-          </div>
+          <EmptyState
+            icon={ShieldCheck}
+            title="No equipment found in this filter"
+            description="Add your extinguishers, wet risers, and detection panels to monitor maintenance schedules."
+            actionText="Register Equipment"
+            onAction={() => setIsModalOpen(true)}
+          />
         ) : (
-          <div className="space-y-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map((item) => {
               const isOverdue = item.status === "Overdue";
               const isDueSoon = item.status.includes("Due Soon");
@@ -333,375 +416,324 @@ export default function MyEquipment() {
               return (
                 <div
                   key={item._id || item.equipmentId}
-                  className={`bg-white border rounded-xl p-5 shadow-sm space-y-4 transition-all ${
+                  className={`bg-white rounded-2xl border p-6 flex flex-col justify-between shadow-sm transition-all hover:shadow-md ${
                     isOverdue
-                      ? "border-red-300 bg-red-50/20"
+                      ? "border-primary-300 ring-1 ring-primary-100"
                       : isDueSoon
-                      ? "border-amber-400 bg-amber-50/20"
-                      : "border-black/10"
+                      ? "border-amber-300 ring-1 ring-amber-100"
+                      : "border-slate-200/80 hover:border-slate-300"
                   }`}
                 >
-                  <div className="flex flex-wrap items-start justify-between pb-3 border-b border-black/10 gap-3">
-                    <div>
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-bold text-base text-ink">{item.name}</span>
-                        <span className="font-mono text-xs text-steel">({item.equipmentId})</span>
-                        <span
-                          className={`px-2.5 py-0.5 rounded text-xs font-bold ${
-                            isOverdue
-                              ? "bg-red-100 text-red-700 animate-pulse"
-                              : isDueSoon
-                              ? "bg-amber-100 text-amber-900"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {item.status}
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div>
+                        <span className="font-mono text-[11px] font-bold text-slate-400 block">
+                          {item.equipmentId}
                         </span>
+                        <h3 className="font-bold text-base text-slate-900 leading-snug mt-0.5">
+                          {item.name}
+                        </h3>
                       </div>
-
-                      <p className="text-xs text-steel mt-1 flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-brand" /> Location: {item.location} · Serial No:{" "}
-                        <span className="font-mono">{item.serialNumber}</span>
-                        {item.capacity && <span> · Capacity: {item.capacity}</span>}
-                      </p>
+                      <Badge
+                        tone={
+                          item.status === "Healthy"
+                            ? "success"
+                            : isDueSoon
+                            ? "warning"
+                            : "primary"
+                        }
+                      >
+                        {item.status}
+                      </Badge>
                     </div>
 
+                    <p className="text-xs text-slate-500 flex items-center gap-1.5 mb-4">
+                      <MapPin className="w-3.5 h-3.5 text-primary-600 shrink-0" />
+                      <span className="truncate">{item.location}</span>
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100 mb-4">
+                      <div>
+                        <span className="text-slate-400 text-[10px] uppercase font-bold block">
+                          Type & Capacity
+                        </span>
+                        <span className="font-semibold text-slate-800">
+                          {item.capacity} • {item.equipmentType}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px] uppercase font-bold block">
+                          Serial Number
+                        </span>
+                        <span className="font-mono text-slate-700 text-xs truncate block">
+                          {item.serialNumber}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 text-xs text-slate-600">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Next Inspection:</span>
+                        <strong
+                          className={
+                            new Date(item.nextInspectionDate) < new Date()
+                              ? "text-primary-600 font-bold"
+                              : "text-slate-800"
+                          }
+                        >
+                          {new Date(item.nextInspectionDate).toLocaleDateString("en-IN")}
+                        </strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Next Hydro-test / Refill:</span>
+                        <strong
+                          className={
+                            new Date(item.nextRefillDate) < new Date()
+                              ? "text-primary-600 font-bold"
+                              : "text-slate-800"
+                          }
+                        >
+                          {new Date(item.nextRefillDate).toLocaleDateString("en-IN")}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setDetailItem(item)}
+                    >
+                      Details
+                    </Button>
+
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setDetailItem(item)}
-                        className="px-2.5 py-1.5 rounded text-xs font-semibold bg-paper hover:bg-black/5 text-ink border border-black/10 transition-colors"
-                      >
-                        Specs & Log
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          navigate(
-                            `/book-service?type=${encodeURIComponent(
-                              item.status.includes("Refill") ? "Refilling" : "Inspection"
-                            )}&equipment=${encodeURIComponent(`${item.name} (${item.equipmentId})`)}`
-                          )
-                        }
-                        className={`px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors ${
-                          isOverdue || isDueSoon
-                            ? "bg-brand hover:bg-brand-dark text-white"
-                            : "bg-paper hover:bg-black/5 text-ink border border-black/10"
-                        }`}
-                      >
-                        <Wrench className="w-3.5 h-3.5" /> Book Service Visit
-                      </button>
-
+                      <Button asChild size="sm" variant="primary">
+                        <Link
+                          to={`/book-service?type=${
+                            isOverdue || item.status === "Refill Due Soon"
+                              ? "Refilling"
+                              : "Inspection"
+                          }&equipment=${encodeURIComponent(item.name + " (" + item.equipmentId + ")")}`}
+                        >
+                          Book Service
+                        </Link>
+                      </Button>
                       <button
                         onClick={() => handleDelete(item)}
-                        className="p-1.5 text-steel hover:text-red-600 rounded transition-colors"
-                        title="Delete record"
+                        className="p-2 text-slate-400 hover:text-primary-600 transition-colors"
+                        title="Delete Equipment"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                    <div className="bg-paper p-3 rounded-lg border border-black/5">
-                      <span className="text-steel block flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-steel/70" /> Installed On
-                      </span>
-                      <strong className="text-ink mt-0.5 block">
-                        {new Date(item.installationDate).toLocaleDateString("en-IN")}
-                      </strong>
-                    </div>
-
-                    <div className="bg-paper p-3 rounded-lg border border-black/5">
-                      <span className="text-steel block flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-steel/70" /> Last Refilled
-                      </span>
-                      <strong className="text-ink mt-0.5 block">
-                        {new Date(item.lastRefillDate).toLocaleDateString("en-IN")}
-                      </strong>
-                    </div>
-
-                    <div
-                      className={`p-3 rounded-lg border ${
-                        isOverdue
-                          ? "bg-red-50 border-red-200 text-red-900"
-                          : isDueSoon
-                          ? "bg-amber-50 border-amber-200 text-amber-900"
-                          : "bg-paper border-black/5 text-ink"
-                      }`}
-                    >
-                      <span className="block flex items-center gap-1">
-                        <AlertTriangle className="w-3.5 h-3.5" /> Next Refill Due
-                      </span>
-                      <strong className="mt-0.5 block">
-                        {new Date(item.nextRefillDate).toLocaleDateString("en-IN")}
-                      </strong>
-                    </div>
-
-                    <div className="bg-paper p-3 rounded-lg border border-black/5">
-                      <span className="text-steel block flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-steel/70" /> Next Inspection
-                      </span>
-                      <strong className="text-ink mt-0.5 block">
-                        {new Date(item.nextInspectionDate).toLocaleDateString("en-IN")}
-                      </strong>
-                    </div>
-                  </div>
-
-                  {item.notes && (
-                    <div className="text-xs text-steel bg-paper/60 p-2.5 rounded-lg border border-black/5 flex items-center gap-2">
-                      <FileCheck className="w-3.5 h-3.5 text-brand shrink-0" />
-                      <span>{item.notes}</span>
-                    </div>
-                  )}
                 </div>
               );
             })}
           </div>
         )}
-          </div>
-        </div>
       </main>
 
-      {/* Register Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-black/10 pb-3">
-              <h3 className="font-display font-bold text-lg text-ink">Register Fire Safety Equipment</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-steel hover:text-ink">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      {/* Register New Equipment Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Register Fire Protection Equipment"
+      >
+        <form onSubmit={handleAddEquipment} className="space-y-4 text-xs sm:text-sm">
+          <Input
+            label="Equipment Name *"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Ceasefire 4kg ABC Extinguisher"
+          />
 
-            <form onSubmit={handleAddEquipment} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-ink mb-1">Equipment Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. SafePro 4kg ABC Fire Extinguisher"
-                  className="w-full px-3 py-2 border border-black/15 rounded-md focus:border-brand focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-ink mb-1">Serial Number *</label>
-                  <input
-                    type="text"
-                    required
-                    value={serialNumber}
-                    onChange={(e) => setSerialNumber(e.target.value)}
-                    placeholder="e.g. SN-2024-ABC-8412"
-                    className="w-full px-3 py-2 border border-black/15 rounded-md focus:border-brand focus:outline-none uppercase"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-ink mb-1">Capacity / Weight</label>
-                  <input
-                    type="text"
-                    value={capacity}
-                    onChange={(e) => setCapacity(e.target.value)}
-                    placeholder="e.g. 4kg, 4.5kg, 9L"
-                    className="w-full px-3 py-2 border border-black/15 rounded-md focus:border-brand focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-ink mb-1">Equipment Type</label>
-                  <select
-                    value={equipmentType}
-                    onChange={(e) => setEquipmentType(e.target.value)}
-                    className="w-full px-3 py-2 border border-black/15 rounded-md focus:border-brand focus:outline-none"
-                  >
-                    <option value="ABC Dry Powder">ABC Dry Powder (IS 15683)</option>
-                    <option value="CO2">CO2 Carbon Dioxide (IS 2878)</option>
-                    <option value="Mechanical Foam (AFFF)">Mechanical Foam (AFFF)</option>
-                    <option value="Water / Wet Chemical">Water / Wet Chemical</option>
-                    <option value="Clean Agent">Clean Agent (HFC/FK)</option>
-                    <option value="Hose Reel Drum">Hose Reel Drum</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-semibold text-ink mb-1">Installation Location *</label>
-                  <input
-                    type="text"
-                    required
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="e.g. Server Room (Floor 2)"
-                    className="w-full px-3 py-2 border border-black/15 rounded-md focus:border-brand focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-ink mb-1">Installation Date</label>
-                  <input
-                    type="date"
-                    value={installationDate}
-                    onChange={(e) => setInstallationDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-black/15 rounded-md focus:border-brand focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-ink mb-1">Last Refill Date</label>
-                  <input
-                    type="date"
-                    value={lastRefillDate}
-                    onChange={(e) => setLastRefillDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-black/15 rounded-md focus:border-brand focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-ink mb-1">Next Refill Due Date *</label>
-                  <input
-                    type="date"
-                    required
-                    value={nextRefillDate}
-                    onChange={(e) => setNextRefillDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-black/15 rounded-md focus:border-brand focus:outline-none font-semibold text-brand"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-ink mb-1">Next Inspection Date</label>
-                  <input
-                    type="date"
-                    value={nextInspectionDate}
-                    onChange={(e) => setNextInspectionDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-black/15 rounded-md focus:border-brand focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-ink mb-1">Service & Technical Notes</label>
-                <textarea
-                  rows={2}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. Hydro-test stamped 2024, gauge in green zone"
-                  className="w-full px-3 py-2 border border-black/15 rounded-md focus:border-brand focus:outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-3 border-t border-black/10">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-black/15 text-ink hover:bg-black/5 rounded font-semibold transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 bg-brand hover:bg-brand-dark text-white rounded font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
-                >
-                  {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Equipment
-                </button>
-              </div>
-            </form>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Input
+              label="Serial Number / Body Stamping *"
+              required
+              value={serialNumber}
+              onChange={(e) => setSerialNumber(e.target.value)}
+              placeholder="e.g. SN-2024-ABC-1092"
+            />
+            <Input
+              label="Location / Floor / Wing *"
+              required
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g. Floor 2, Server Lobby"
+            />
           </div>
-        </div>
-      )}
 
-      {/* Equipment Technical Profile & History Modal */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Select
+              label="Equipment Type"
+              value={equipmentType}
+              onChange={(e) => setEquipmentType(e.target.value)}
+              options={[
+                { value: "ABC Dry Powder", label: "ABC Dry Powder (IS 15683)" },
+                { value: "CO2", label: "Carbon Dioxide CO2 (IS 2878)" },
+                { value: "Mechanical Foam (AFFF)", label: "Mechanical Foam AFFF (IS 10204)" },
+                { value: "Clean Agent (FE-36)", label: "Clean Agent FE-36" },
+                { value: "Water Type", label: "Water Type (IS 940)" },
+                { value: "Fire Hydrant Landing Valve", label: "Fire Hydrant Landing Valve" },
+                { value: "Hose Reel Drum", label: "Hose Reel Drum" },
+                { value: "Smoke Detector Panel", label: "Smoke Detector Panel" },
+              ]}
+            />
+            <Input
+              label="Capacity / Rating"
+              value={capacity}
+              onChange={(e) => setCapacity(e.target.value)}
+              placeholder="e.g. 4kg, 4.5kg, 9L"
+            />
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Input
+              label="Installation Date"
+              type="date"
+              value={installationDate}
+              onChange={(e) => setInstallationDate(e.target.value)}
+            />
+            <Input
+              label="Last Refill / Test Date"
+              type="date"
+              value={lastRefillDate}
+              onChange={(e) => setLastRefillDate(e.target.value)}
+            />
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Input
+              label="Next Inspection Due"
+              type="date"
+              value={nextInspectionDate}
+              onChange={(e) => setNextInspectionDate(e.target.value)}
+            />
+            <Input
+              label="Next Refill / Hydro-Test Due"
+              type="date"
+              value={nextRefillDate}
+              onChange={(e) => setNextRefillDate(e.target.value)}
+            />
+          </div>
+
+          <Textarea
+            label="Notes / Service Instructions"
+            rows={2}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="e.g. Mounted near electrical distribution board; check pressure gauge..."
+          />
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <Button variant="secondary" type="button" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" isLoading={submitting}>
+              Register Equipment
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Detail Modal */}
       {detailItem && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-black/10 pb-3">
+        <Modal
+          isOpen={Boolean(detailItem)}
+          onClose={() => setDetailItem(null)}
+          title={`Equipment: ${detailItem.name}`}
+        >
+          <div className="space-y-4 text-xs sm:text-sm">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
-                <span className="text-[10px] font-mono font-bold text-brand uppercase">
+                <span className="text-slate-400 font-mono text-xs block">Equipment ID</span>
+                <span className="font-mono text-base font-bold text-slate-900">
                   {detailItem.equipmentId}
                 </span>
-                <h3 className="font-display font-bold text-base text-ink">{detailItem.name}</h3>
               </div>
-              <button onClick={() => setDetailItem(null)} className="text-steel hover:text-ink">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3 bg-paper p-3.5 rounded-xl">
-                <div>
-                  <span className="text-steel block">Serial Number</span>
-                  <strong className="text-ink font-mono mt-0.5 block">{detailItem.serialNumber}</strong>
-                </div>
-                <div>
-                  <span className="text-steel block">Equipment Type</span>
-                  <strong className="text-ink mt-0.5 block">{detailItem.equipmentType}</strong>
-                </div>
-                <div>
-                  <span className="text-steel block">Capacity</span>
-                  <strong className="text-ink mt-0.5 block">{detailItem.capacity || "Standard"}</strong>
-                </div>
-                <div>
-                  <span className="text-steel block">Location Node</span>
-                  <strong className="text-ink mt-0.5 block">{detailItem.location}</strong>
-                </div>
-              </div>
-
-              <div className="p-3.5 bg-paper rounded-xl space-y-2">
-                <h4 className="font-bold text-ink">Statutory Servicing Timeline</h4>
-                <div className="space-y-1 text-steel">
-                  <p>• Commissioned On: <strong className="text-ink">{new Date(detailItem.installationDate).toLocaleDateString("en-IN")}</strong></p>
-                  <p>• Last Chemical Refill: <strong className="text-ink">{new Date(detailItem.lastRefillDate).toLocaleDateString("en-IN")}</strong></p>
-                  <p>• Next Refill Due: <strong className="text-brand">{new Date(detailItem.nextRefillDate).toLocaleDateString("en-IN")}</strong></p>
-                  <p>• Next Routine Inspection: <strong className="text-ink">{new Date(detailItem.nextInspectionDate).toLocaleDateString("en-IN")}</strong></p>
-                </div>
-              </div>
-
-              <div className="p-3.5 bg-green-50/70 border border-green-200 rounded-xl space-y-1 text-green-900">
-                <span className="font-bold flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-green-700" /> Maintenance Relationship
-                </span>
-                <p className="text-[11px]">
-                  Associated with registered premises fire protection schedule. Eligible for Form B biannual statutory sign-off.
-                </p>
-              </div>
-
-              {detailItem.notes && (
-                <div className="p-3 bg-paper rounded-xl border border-black/5 text-steel">
-                  <strong className="text-ink block mb-0.5">Inspector Notes:</strong>
-                  {detailItem.notes}
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between pt-3 border-t border-black/10">
-              <button
-                onClick={() => setDetailItem(null)}
-                className="px-4 py-2 border border-black/15 text-ink rounded-lg text-xs font-semibold hover:bg-paper"
+              <Badge
+                tone={
+                  detailItem.status === "Healthy"
+                    ? "success"
+                    : detailItem.status.includes("Due Soon")
+                    ? "warning"
+                    : "primary"
+                }
               >
+                {detailItem.status}
+              </Badge>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
+              <div>
+                <span className="text-slate-500 block">Serial Number</span>
+                <strong className="text-slate-900 font-mono">{detailItem.serialNumber}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Location</span>
+                <strong className="text-slate-900">{detailItem.location}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Type</span>
+                <strong className="text-slate-900">{detailItem.equipmentType}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Capacity</span>
+                <strong className="text-slate-900">{detailItem.capacity}</strong>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-slate-500">Installation Date:</span>
+                <span className="text-slate-900 font-semibold">{detailItem.installationDate}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-slate-500">Last Inspection:</span>
+                <span className="text-slate-900 font-semibold">{detailItem.lastInspectionDate}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-slate-500">Last Refill:</span>
+                <span className="text-slate-900 font-semibold">{detailItem.lastRefillDate}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-slate-500">Next Inspection Due:</span>
+                <span className="text-primary-700 font-bold">{detailItem.nextInspectionDate}</span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-slate-500">Next Hydro-test / Refill:</span>
+                <span className="text-primary-700 font-bold">{detailItem.nextRefillDate}</span>
+              </div>
+            </div>
+
+            {detailItem.notes && (
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600">
+                <strong className="text-slate-800 block mb-1">Notes:</strong>
+                {detailItem.notes}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <Button variant="secondary" onClick={() => setDetailItem(null)}>
                 Close
-              </button>
-
-              <button
-                onClick={() => {
-                  const item = detailItem;
-                  setDetailItem(null);
-                  navigate(
-                    `/book-service?type=${encodeURIComponent(
-                      item.status.includes("Refill") ? "Refilling" : "Inspection"
-                    )}&equipment=${encodeURIComponent(`${item.name} (${item.equipmentId})`)}`
-                  );
-                }}
-                className="px-4 py-2 bg-brand hover:bg-brand-dark text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm"
-              >
-                <Wrench className="w-3.5 h-3.5" /> Book Service for this Unit
-              </button>
+              </Button>
+              <Button asChild variant="primary">
+                <Link
+                  to={`/book-service?type=Refilling&equipment=${encodeURIComponent(
+                    detailItem.name + " (" + detailItem.equipmentId + ")"
+                  )}`}
+                >
+                  Schedule Service
+                </Link>
+              </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </>
   );

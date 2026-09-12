@@ -118,18 +118,31 @@ async function seed() {
   await connectDB();
 
   // 1. Admin & Demo staff
-  const existingAdmin = await User.findOne({ email: env.SEED_ADMIN_EMAIL });
+  let existingAdmin = await User.findOne({
+    $or: [{ email: env.SEED_ADMIN_EMAIL.toLowerCase() }, { role: "super_admin" }],
+  }).select("+passwordHash");
+
   if (!existingAdmin) {
-    await User.create({
+    existingAdmin = await User.create({
       name: env.SEED_ADMIN_NAME,
       email: env.SEED_ADMIN_EMAIL,
       phone: "9999999999",
       passwordHash: env.SEED_ADMIN_PASSWORD,
       role: "super_admin",
       customerType: "corporate",
+      isActive: true,
       isEmailVerified: true,
     });
-    logger.info(`Created super_admin account: ${env.SEED_ADMIN_EMAIL}`);
+    logger.info(`Created super_admin account: ${existingAdmin.email}`);
+  } else {
+    // Preserve existing Super Admin account and ensure active status and RBAC credentials
+    existingAdmin.role = "super_admin";
+    existingAdmin.isActive = true;
+    existingAdmin.isEmailVerified = true;
+    existingAdmin.mustChangePassword = false;
+    existingAdmin.passwordHash = env.SEED_ADMIN_PASSWORD; // Pre-save hook hashes it
+    await existingAdmin.save();
+    logger.info(`Verified & synced existing super_admin account: ${existingAdmin.email}`);
   }
 
   const demoStaff = [

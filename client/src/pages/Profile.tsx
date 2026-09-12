@@ -3,11 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { authService } from "@/services/authService";
 import Seo from "@/components/Seo";
-import AccountNav from "@/components/AccountNav";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Button from "@/components/ui/Button";
 import {
   LogOut,
   ShoppingBag,
-  FileSpreadsheet,
+  FileText,
   Bookmark,
   MapPin,
   ShieldCheck,
@@ -21,8 +22,8 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
-  CalendarCheck,
-  FileCheck,
+  ChevronRight,
+  Flame,
 } from "lucide-react";
 
 export default function Profile() {
@@ -43,7 +44,7 @@ export default function Profile() {
 
   async function handleRequestPasswordReset() {
     if (!user?.email) {
-      setResetError("No email address is linked to your account. Please contact support to update your email.");
+      setResetError("No email address is linked to your account. Please contact support to register an email.");
       return;
     }
     setResetLoading(true);
@@ -64,143 +65,135 @@ export default function Profile() {
     {
       to: "/orders",
       label: "My Orders",
-      desc: "Track orders, dispatch updates & delivery status",
+      desc: "Equipment delivery tracking, dispatch timeline & receipts",
       icon: ShoppingBag,
-      color: "text-blue-600 bg-blue-50 border-blue-100",
+      color: "text-primary-700 bg-primary-50 border-primary-100",
     },
     {
       to: "/quotes",
       label: "B2B Quotations",
-      desc: "View submitted RFQs, approvals & download PDFs",
-      icon: FileSpreadsheet,
-      color: "text-amber-600 bg-amber-50 border-amber-100",
+      desc: "Formal project estimates, volume rates & GST approvals",
+      icon: FileText,
+      color: "text-orange-700 bg-orange-50 border-orange-100",
     },
     {
       to: "/my-equipment",
-      label: "Fire Equipment",
-      desc: "Registered extinguishers, hydro-test logs & reminders",
+      label: "Fire Equipment Tracker",
+      desc: "Registered extinguishers, hydro-test schedules & statutory reminders",
       icon: ShieldCheck,
-      color: "text-emerald-600 bg-emerald-50 border-emerald-100",
+      color: "text-emerald-700 bg-emerald-50 border-emerald-100",
     },
     {
       to: "/service-history",
-      label: "Service Bookings",
-      desc: "Status of technician visits, refills & inspections",
+      label: "Service & Maintenance Log",
+      desc: "Status of technician visits, cylinder refills & Form B tests",
       icon: Wrench,
-      color: "text-indigo-600 bg-indigo-50 border-indigo-100",
-    },
-    {
-      to: "/services/amc",
-      label: "AMC & Form B",
-      desc: "Active maintenance contracts & statutory compliance",
-      icon: FileCheck,
-      color: "text-red-600 bg-red-50 border-red-100",
+      color: "text-blue-700 bg-blue-50 border-blue-100",
     },
     {
       to: "/invoices",
-      label: "GST Invoices",
-      desc: "Download official tax invoices & receipts",
+      label: "GST Tax Invoices",
+      desc: "Download official compliance tax invoices & payment vouchers",
       icon: Receipt,
-      color: "text-teal-600 bg-teal-50 border-teal-100",
+      color: "text-purple-700 bg-purple-50 border-purple-100",
+    },
+    {
+      to: "/wishlist",
+      label: "Saved Wishlist",
+      desc: "Equipment shortlisted for future facility upgrades",
+      icon: Bookmark,
+      color: "text-rose-700 bg-rose-50 border-rose-100",
     },
     {
       to: "/addresses",
-      label: "Delivery Addresses",
-      desc: "Manage saved shipping & site inspection locations",
+      label: "Premise & Site Addresses",
+      desc: "Manage factory locations, plant addresses & delivery sites",
       icon: MapPin,
-      color: "text-violet-600 bg-violet-50 border-violet-100",
+      color: "text-slate-700 bg-slate-100 border-slate-200",
     },
     {
       to: "/book-service",
-      label: "Book a Technician",
-      desc: "Schedule fire extinguisher refill or safety audit",
+      label: "Book Certified Inspection",
+      desc: "Schedule emergency refill, hydrostatic test, or fire audit",
       icon: ExternalLink,
-      color: "text-brand bg-brand/5 border-brand/20",
+      color: "text-primary-700 bg-primary-50 border-primary-100",
     },
   ];
 
   return (
     <>
       <Seo
-        title="My Account — AK Fire Safety Service"
-        description="Manage your AK Fire Safety customer account, orders, registered equipment, and safety services."
+        title="Customer Safety Portal — Shubam Fire Protection"
+        description="Manage your Shubam Fire Protection account, equipment records, Form B compliance, and quotations."
       />
 
-      <div className="bg-paper border-b border-black/10 py-6">
-        <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-slate-50 border-b border-slate-200/80 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <Breadcrumb items={[{ label: "Customer Portal" }]} />
+        </div>
+      </div>
+
+      <div className="bg-white border-b border-slate-200 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-brand font-mono">
-              Customer Portal
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-ink mt-0.5">
-              Account Overview
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider mb-2">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Customer Safety Portal</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-dark">
+              Welcome back, {user.name}
             </h1>
-            <p className="text-xs sm:text-sm text-steel mt-0.5">
-              Welcome back, <strong className="text-ink">{user.name}</strong>. Manage your commercial equipment, orders, and safety certificates.
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Authorized facility account &bull; Direct access to equipment records, Form B compliance &amp; orders
             </p>
           </div>
           <button
             onClick={handleLogout}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg text-xs font-bold transition-colors shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-xs font-bold transition-colors w-fit shadow-2xs"
           >
-            <LogOut className="w-4 h-4" /> Log Out
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
           </button>
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          <AccountNav />
-
-          <div className="flex-1 min-w-0 w-full space-y-6">
-            {/* User Profile & Company Credentials Card */}
-            <div className="bg-white border border-black/10 rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center justify-between pb-4 border-b border-black/10 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center font-bold text-lg font-display">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-ink text-base">{user.name}</h2>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 capitalize">
-                      {user.customerType || "Retail"} Account
-                    </span>
-                  </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
+          {/* Profile Card & Security Info */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-5">
+              <div className="flex items-center gap-4 pb-5 border-b border-slate-100">
+                <div className="w-14 h-14 rounded-2xl bg-primary-700 text-white flex items-center justify-center font-bold text-xl shadow-xs">
+                  {user.name.charAt(0).toUpperCase()}
                 </div>
-
-                <div className="text-right">
-                  <span className="text-[10px] uppercase font-bold text-steel block">Account Status</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-safe">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Active &amp; Verified
+                <div>
+                  <h2 className="font-bold text-dark text-base font-display">{user.name}</h2>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 capitalize mt-1 border border-slate-200">
+                    {user.customerType} Client
                   </span>
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4 text-xs">
-                <div className="p-3 bg-paper/60 rounded-xl border border-black/5 flex items-center gap-3">
-                  <Phone className="w-4 h-4 text-brand shrink-0" />
-                  <div>
-                    <span className="text-[10px] text-steel block">Phone Number</span>
-                    <strong className="text-ink font-medium">{user.phone}</strong>
-                  </div>
+              <div className="space-y-3 text-xs">
+                <div className="flex items-center gap-3 text-slate-700">
+                  <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span className="font-semibold">{user.phone}</span>
                 </div>
-
-                <div className="p-3 bg-paper/60 rounded-xl border border-black/5 flex items-center gap-3">
-                  <Mail className="w-4 h-4 text-brand shrink-0" />
-                  <div>
-                    <span className="text-[10px] text-steel block">Email Address</span>
-                    <strong className="text-ink font-medium break-all">{user.email || "Not Provided"}</strong>
+                {user.email && (
+                  <div className="flex items-center gap-3 text-slate-700">
+                    <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="font-medium break-all">{user.email}</span>
                   </div>
-                </div>
-
+                )}
                 {user.companyName && (
-                  <div className="p-3 bg-paper/60 rounded-xl border border-black/5 flex items-center gap-3 sm:col-span-2">
-                    <Building2 className="w-4 h-4 text-brand shrink-0" />
+                  <div className="flex items-start gap-3 text-slate-700 pt-2 border-t border-slate-100">
+                    <Building2 className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                     <div>
-                      <span className="text-[10px] text-steel block">Company / Housing Society Name</span>
-                      <strong className="text-ink font-medium">{user.companyName}</strong>
+                      <strong className="text-dark block font-bold">{user.companyName}</strong>
                       {user.gstNumber && (
-                        <span className="ml-2 text-steel font-mono text-[11px]">(GSTIN: {user.gstNumber})</span>
+                        <span className="text-slate-500 font-mono text-[11px] block mt-0.5">
+                          GSTIN: {user.gstNumber}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -208,71 +201,76 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Quick Portals Grid */}
-            <div>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-steel mb-3">
-                Quick Service &amp; Asset Management
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {quickLinks.map((link) => {
-                  const Icon = link.icon;
-                  return (
-                    <Link
-                      key={link.to}
-                      to={link.to}
-                      className="bg-white border border-black/10 rounded-2xl p-5 hover:border-brand/40 hover:shadow-md transition-all group flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border mb-3 ${link.color}`}>
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <h3 className="font-semibold text-ink text-sm group-hover:text-brand transition-colors">
-                          {link.label}
-                        </h3>
-                        <p className="text-xs text-steel mt-1 line-clamp-2 leading-relaxed">{link.desc}</p>
-                      </div>
-                      <span className="text-[11px] font-semibold text-brand mt-4 inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                        Access portal &rarr;
-                      </span>
-                    </Link>
-                  );
-                })}
+            {/* Security & Password Card */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+                <Lock className="w-4 h-4 text-dark" />
+                <h3 className="font-bold text-dark text-sm font-display">Security Credentials</h3>
               </div>
-            </div>
-
-            {/* Security & Password Settings Card */}
-            <div className="bg-white border border-black/10 rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center gap-2 pb-3 border-b border-black/10 mb-4">
-                <Lock className="w-4 h-4 text-brand" />
-                <h3 className="font-bold text-ink text-sm">Security &amp; Account Credentials</h3>
-              </div>
-              <p className="text-xs text-steel mb-4 leading-relaxed max-w-xl">
-                Update your account password or request a secure verification link to ensure authorized access to facility records.
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Need to update your account password? Receive a secure password reset link directly at your registered email address.
               </p>
 
               {resetSent ? (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-2.5 text-xs text-emerald-800">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex items-start gap-2.5 text-xs text-emerald-800">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Password reset email dispatched to <strong>{user.email}</strong>. Check your inbox to proceed.</span>
+                  <span>Reset link dispatched to {user.email}. Please check your inbox.</span>
                 </div>
               ) : (
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleRequestPasswordReset}
-                    disabled={resetLoading}
-                    className="text-xs font-bold py-2.5 px-4 bg-paper hover:bg-gray-200 border border-black/15 hover:border-brand hover:text-brand rounded-lg transition-colors text-ink disabled:opacity-50"
-                  >
-                    {resetLoading ? "Sending Link..." : "Send Password Reset Email"}
-                  </button>
-                  {resetError && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-2 flex items-center gap-1.5 text-xs text-red-700">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{resetError}</span>
-                    </div>
-                  )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRequestPasswordReset}
+                  isLoading={resetLoading}
+                  className="w-full"
+                >
+                  Send Password Reset Link
+                </Button>
+              )}
+
+              {resetError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs text-red-700 font-medium">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{resetError}</span>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Quick Services Grid */}
+          <div className="lg:col-span-8 space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Customer Services &amp; Records Management
+            </h2>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              {quickLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-slate-300 hover:shadow-hover transition-all group flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center border mb-3.5 shadow-2xs ${link.color}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h3 className="font-bold text-dark text-sm font-display group-hover:text-primary-700 transition-colors">
+                        {link.label}
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                        {link.desc}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-primary-700">
+                      <span>Access Portal</span>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>

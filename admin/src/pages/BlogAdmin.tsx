@@ -19,6 +19,7 @@ import {
 import { adminBlogService, AdminBlogPost } from "@/services/adminBlogService";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import ImageUploadInput from "@/components/ImageUploadInput";
 import { useToast } from "@/store/toastStore";
 
 export default function BlogAdmin() {
@@ -51,7 +52,7 @@ export default function BlogAdmin() {
         status: statusFilter === "all" ? undefined : statusFilter,
         search: searchTerm || undefined,
       });
-      setPosts(data.posts || []);
+      setPosts(data.posts || (data as any).items || []);
     } catch (err) {
       console.error("Failed to load blog posts", err);
     } finally {
@@ -105,6 +106,10 @@ export default function BlogAdmin() {
 
   async function handleSavePost(e: React.FormEvent) {
     e.preventDefault();
+    if (!featuredImage.trim()) {
+      toast.error("Please provide or upload a featured cover image for this article");
+      return;
+    }
     setIsSaving(true);
     try {
       const tags = tagsInput
@@ -129,13 +134,16 @@ export default function BlogAdmin() {
 
       if (editingPostId) {
         await adminBlogService.updatePost(editingPostId, payload);
+        toast.success("Blog article updated successfully");
       } else {
         await adminBlogService.createPost(payload);
+        toast.success("Blog article created successfully");
       }
       setIsEditorOpen(false);
       fetchPosts();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save post", err);
+      toast.error(err?.response?.data?.message || "Failed to save blog article");
     } finally {
       setIsSaving(false);
     }
@@ -262,9 +270,24 @@ export default function BlogAdmin() {
                 {posts.map((post) => (
                   <tr key={post._id} className="hover:bg-paper/30 transition-colors">
                     <td className="p-3.5 max-w-sm">
-                      <div className="font-bold text-ink text-sm">{post.title}</div>
-                      <span className="text-[11px] font-mono text-steel block mt-0.5">/blog/{post.slug}</span>
-                      <p className="text-steel line-clamp-1 mt-1 text-[11px]">{post.excerpt}</p>
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-paper border border-black/10 overflow-hidden shrink-0 flex items-center justify-center">
+                          {post.featuredImage ? (
+                            <img
+                              src={post.featuredImage}
+                              alt={post.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <FileText className="w-5 h-5 text-steel" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-ink text-sm truncate">{post.title}</div>
+                          <span className="text-[11px] font-mono text-steel block mt-0.5">/blog/{post.slug}</span>
+                          <p className="text-steel line-clamp-1 mt-0.5 text-[11px]">{post.excerpt}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="p-3.5">
                       <span className="px-2 py-0.5 rounded bg-brand/10 text-brand font-medium text-[11px]">
@@ -401,16 +424,15 @@ export default function BlogAdmin() {
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="font-bold text-ink block">Featured Image URL</label>
-                <input
-                  type="text"
-                  placeholder="https://example.com/banner.jpg"
-                  value={featuredImage}
-                  onChange={(e) => setFeaturedImage(e.target.value)}
-                  className="w-full p-2 bg-paper/50 border border-black/10 rounded focus:outline-none focus:ring-1 focus:ring-brand"
-                />
-              </div>
+              <ImageUploadInput
+                label="Featured / Cover Image"
+                required
+                value={featuredImage}
+                onChange={setFeaturedImage}
+                folder="blog"
+                aspectRatio="card"
+                helpText="Choose 'Upload Image' to upload from your computer or 'Image URL' to enter an image address directly."
+              />
 
               <div className="space-y-1">
                 <label className="font-bold text-ink block">Short Excerpt *</label>

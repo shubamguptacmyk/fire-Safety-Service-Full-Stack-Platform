@@ -2,7 +2,12 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { faqService } from "@/services/faqService";
 import Seo from "@/components/Seo";
-import { Search, ChevronDown, HelpCircle, Loader2 } from "lucide-react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Badge from "@/components/Badge";
+import Button from "@/components/ui/Button";
+import TrustBadge from "@/components/ui/TrustBadge";
+import { Search, ChevronDown, HelpCircle, Loader2, ArrowRight, MessageSquare, PhoneCall } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface FaqItem {
   q: string;
@@ -29,27 +34,27 @@ const FALLBACK_FAQS: FaqItem[] = [
   {
     category: "AMC & Refilling",
     q: "How frequently must fire extinguishers be refilled and tested?",
-    a: "Under IS 2190 guidelines, fire extinguishers must be inspected quarterly and refilled after every single discharge or every 1 to 3 years depending on chemical type. Seamless CO2 shells must undergo hydraulic pressure testing every 5 years, while ABC powder shells must be tested every 3 years.",
+    a: "Under IS 2190 guidelines, fire extinguishers must be inspected quarterly and refilled after every single discharge or every 1 to 3 years depending on chemical type. Seamless CO2 shells must undergo hydraulic pressure testing every 5 years, while ABC powder shells must be tested every 3 years at 35 bar.",
   },
   {
     category: "AMC & Refilling",
     q: "Do you provide standby loaner extinguishers during refilling?",
-    a: "Yes. For societies and industrial clients in Navi Mumbai and Mumbai MMR with 5 or more units, our logistics vans supply temporary loaner extinguishers to ensure your building remains protected during workshop recharge and testing.",
+    a: "Yes. For housing societies and commercial facilities in Navi Mumbai and Mumbai MMR with 5 or more units, our logistics vans supply temporary loaner standby extinguishers to ensure your building remains protected during workshop recharge and pressure testing.",
   },
   {
     category: "Form B & Compliance",
     q: "What is Form B and why does my housing society need it?",
-    a: "Under the Maharashtra Fire Prevention and Life Safety Measures Act, 2006, all societies and commercial buildings must submit a biannual Form B certificate (in January and July) to the local Chief Fire Officer (CFO). It confirms that all wet risers, pumps, smoke detectors, and extinguishers have been inspected and are 100% operational.",
+    a: "Under the Maharashtra Fire Prevention and Life Safety Measures Act, 2006, all residential societies and commercial buildings must submit a biannual Form B certificate (in January and July) to the local Chief Fire Officer (CFO). It confirms that all wet risers, pumps, smoke detectors, and extinguishers have been inspected and are 100% operational.",
   },
   {
     category: "Form B & Compliance",
-    q: "Can AK Fire Safety issue Form B compliance certificates?",
-    a: "Yes. AK Fire Safety is a Licensed Agency registered with Maharashtra Fire Services. Following a thorough inspection and hydrostatic verification, our licensed engineers issue the official Form B certificate required by municipal corporations.",
+    q: "Can Shubam Fire Protection issue Form B compliance certificates?",
+    a: "Yes. Shubam Fire Protection is an authorized Licensed Agency registered with Maharashtra Fire Services. Following a thorough on-site inspection and hydrostatic verification, our licensed engineers issue the official Form B certificate required by municipal corporations.",
   },
   {
     category: "Ordering & Billing",
     q: "Can we get GST invoices to claim Input Tax Credit (ITC)?",
-    a: "Yes. Every commercial order and service contract generates a standard GST tax invoice displaying our GSTIN, your company name, your GSTIN, HSN/SAC codes, and itemized 18% GST (CGST 9% + SGST 9% or IGST 18%).",
+    a: "Yes. Every commercial order and service contract generates a standard GST tax invoice displaying our GSTIN, your company legal name, your GSTIN, HSN/SAC codes, and itemized 18% GST (CGST 9% + SGST 9% or IGST 18%).",
   },
   {
     category: "Ordering & Billing",
@@ -76,7 +81,6 @@ export default function Faq() {
     queryFn: () => faqService.getPublicFaqs(selectedCategory === "All" ? undefined : selectedCategory),
   });
 
-  // Normalize API FAQs or fallback
   const items: FaqItem[] =
     apiFaqs.length > 0
       ? apiFaqs.map((f) => ({
@@ -107,96 +111,108 @@ export default function Faq() {
   return (
     <>
       <Seo
-        title="Frequently Asked Questions (FAQ) — AK Fire Safety Service"
-        description="Clear answers regarding fire extinguisher types, refill timelines, hydrostatic testing norms, and Form B compliance in Maharashtra."
+        title="Frequently Asked Questions (FAQ) — Shubam Fire Protection"
+        description="Clear answers on BIS fire extinguisher standards, IS 2190 refilling intervals, Form B Maharashtra Fire Act compliance, and B2B ordering."
       />
 
-      <div className="bg-ink text-white py-12 border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4">
-          <span className="text-xs uppercase tracking-wider text-amber font-semibold">
-            Knowledge Base & Compliance
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-display font-bold mt-1">
-            Frequently Asked Questions
-          </h1>
-          <p className="text-white/70 text-sm mt-2 max-w-xl leading-relaxed">
-            Everything you need to know about fire codes, IS standards, maintenance intervals, and
-            statutory compliance under Maharashtra Fire Safety norms.
-          </p>
+      {/* Hero Header */}
+      <section className="bg-slate-900 text-white py-12 lg:py-16 border-b border-slate-800 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 opacity-90" />
+        <div className="absolute right-0 top-0 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Search Box */}
-          <div className="mt-6 max-w-lg relative">
-            <Search className="w-4 h-4 text-white/50 absolute left-3.5 top-3" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumb
+            items={[{ label: "Frequently Asked Questions" }]}
+            className="mb-6 text-slate-400 [&_a]:text-slate-400 hover:[&_a]:text-white"
+          />
+
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary-950 text-primary-300 border border-primary-800 mb-3">
+              <HelpCircle className="w-3.5 h-3.5" /> Technical Knowledge & Statutory Compliance
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-white">
+              Frequently Asked Questions
+            </h1>
+            <p className="text-slate-300 text-base sm:text-lg mt-4 leading-relaxed">
+              Find technical answers about fire equipment specifications, cylinder refilling protocols, Maharashtra Form B legal mandates, and commercial procurement.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Badges */}
+      <TrustBadge />
+
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-10">
+        {/* Search & Categories Bar */}
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
+              placeholder="Search by topic (e.g. Form B, Hydro test, Refilling, ABC Powder)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by topic, e.g. Form B, CO2, Hydro test, Refill..."
-              className="w-full bg-white/10 border border-white/20 focus:border-amber rounded-lg pl-10 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder:text-white/50 outline-none"
+              className="w-full pl-12 pr-4 py-3.5 text-sm bg-white border border-slate-200 rounded-2xl focus:border-primary-600 outline-none shadow-sm"
             />
           </div>
-        </div>
-      </div>
 
-      <main className="max-w-4xl mx-auto px-4 py-12 space-y-8">
-        {/* Category Pills */}
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                selectedCategory === cat
-                  ? "bg-brand text-white shadow-sm"
-                  : "bg-paper text-ink hover:bg-gray-200 border border-black/10"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  selectedCategory === cat
+                    ? "bg-primary-600 text-white shadow-md"
+                    : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Loading Indicator */}
+        {/* FAQs Accordion */}
         {isLoading ? (
-          <div className="py-16 text-center space-y-2">
-            <Loader2 className="w-6 h-6 animate-spin text-brand mx-auto" />
-            <p className="text-xs text-steel">Retrieving FAQ records...</p>
+          <div className="py-20 text-center space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary-600 mx-auto" />
+            <p className="text-xs text-slate-500">Loading technical answers...</p>
           </div>
         ) : filteredFaqs.length === 0 ? (
-          <div className="p-12 text-center bg-white border border-black/10 rounded-xl">
-            <HelpCircle className="w-10 h-10 text-steel/50 mx-auto mb-2" />
-            <p className="font-semibold text-sm text-ink">No matching questions found.</p>
-            <p className="text-xs text-steel mt-1">Try another keyword or select &ldquo;All&rdquo;.</p>
+          <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center max-w-md mx-auto">
+            <HelpCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h3 className="font-bold text-slate-900 text-base font-display">No questions match your search</h3>
+            <p className="text-xs text-slate-500 mt-1">Try another keyword or reach out directly to our engineering desk.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {filteredFaqs.map((faq, idx) => {
               const isOpen = openIndexes.includes(idx);
               return (
                 <div
                   key={idx}
-                  className="bg-white border border-black/10 rounded-xl overflow-hidden shadow-sm transition-all"
+                  className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden transition-all hover:border-slate-300"
                 >
                   <button
                     onClick={() => toggleFaq(idx)}
-                    className="w-full p-4 sm:p-5 flex items-center justify-between text-left gap-4 hover:bg-paper/50 transition-colors"
+                    className="w-full p-6 text-left flex items-center justify-between gap-4 font-bold text-slate-900 text-sm sm:text-base hover:text-primary-700 transition-colors"
                   >
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand block mb-1">
-                        {faq.category}
-                      </span>
-                      <h3 className="font-bold text-sm text-ink">{faq.q}</h3>
-                    </div>
+                    <span className="flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-primary-600 shrink-0" />
+                      {faq.q}
+                    </span>
                     <ChevronDown
-                      className={`w-4 h-4 text-steel shrink-0 transition-transform duration-200 ${
-                        isOpen ? "rotate-180 text-brand" : ""
+                      className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${
+                        isOpen ? "rotate-180 text-primary-600" : ""
                       }`}
                     />
                   </button>
 
                   {isOpen && (
-                    <div className="px-4 pb-5 sm:px-5 text-xs sm:text-sm text-steel leading-relaxed border-t border-black/5 pt-3 whitespace-pre-line">
-                      {faq.a}
+                    <div className="px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 bg-slate-50/40">
+                      <p className="pt-2">{faq.a}</p>
                     </div>
                   )}
                 </div>
@@ -204,6 +220,33 @@ export default function Faq() {
             })}
           </div>
         )}
+
+        {/* Still Have Questions Banner */}
+        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800 shadow-xl">
+          <div className="space-y-1 text-center md:text-left">
+            <span className="text-xs uppercase tracking-wider text-primary-400 font-mono font-bold">
+              Engineering Support Desk
+            </span>
+            <h2 className="text-xl sm:text-2xl font-display font-bold text-white">
+              Still Have Technical or Statutory Compliance Questions?
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300">
+              Speak directly with our licensed fire protection consultants in Navi Mumbai.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Button asChild variant="primary" size="md">
+              <Link to="/contact">Contact Our Team</Link>
+            </Button>
+            <a
+              href="tel:+919800000000"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-colors border border-slate-700"
+            >
+              <PhoneCall className="w-4 h-4 text-primary-400" /> +91 98000 00000
+            </a>
+          </div>
+        </div>
       </main>
     </>
   );

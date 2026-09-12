@@ -4,760 +4,872 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   ShieldCheck,
-  Bell,
   Wrench,
-  ClipboardList,
   ArrowRight,
   Flame,
-  CheckCircle2,
-  Building2,
   Award,
-  Star,
-  FileCheck,
   Phone,
   FileSpreadsheet,
-  ChevronDown,
+  FileCheck,
+  CheckCircle2,
   Calendar,
   Clock,
-  ExternalLink,
+  MapPin,
   ChevronRight,
-  Shield,
-  Gauge,
-  HelpCircle,
-  Truck,
+  FlameKindling,
+  Sparkles,
+  Zap,
 } from "lucide-react";
-import Badge from "@/components/Badge";
 import Seo from "@/components/Seo";
 import ProductCard from "@/components/ProductCard";
-import BannerCarousel from "@/components/BannerCarousel";
-import PromoBanner from "@/components/PromoBanner";
+import ServiceCard from "@/components/ui/ServiceCard";
+import BlogCard from "@/components/ui/BlogCard";
+import Accordion from "@/components/ui/Accordion";
+import CTASection from "@/components/ui/CTASection";
+import TrustBar from "@/components/ui/TrustBadge";
+import SectionHeader from "@/components/ui/SectionHeader";
+import { ProductCardSkeleton, BlogCardSkeleton } from "@/components/ui/LoadingSkeleton";
+import Button from "@/components/ui/Button";
 import { productService } from "@/services/productService";
 import { categoryService } from "@/services/categoryService";
+import { bannerService } from "@/services/bannerService";
 import { blogService } from "@/services/blogService";
 import { faqService } from "@/services/faqService";
-import { reviewService } from "@/services/reviewService";
-
-const STATUTORY_PILLARS = [
-  {
-    icon: ShieldCheck,
-    title: "IS 15683 & IS 2878 Certified",
-    desc: "Every extinguisher and discharge valve is BIS stamped with genuine batch verification.",
-  },
-  {
-    icon: FileCheck,
-    title: "Biannual Form B Certification",
-    desc: "Direct compliance submission assistance for municipal fire authorities under Maharashtra Fire Act.",
-  },
-  {
-    icon: Gauge,
-    title: "PESO Calibrated Hydro-Testing",
-    desc: "Licensed hydrostatic pressure diagnostics up to 250 bar at our Turbhe workshop.",
-  },
-  {
-    icon: Wrench,
-    title: "2-Hour Emergency AMC Response",
-    desc: "Technician vans stationed across Airoli, Vashi, Taloja, and Thane for rapid dispatch.",
-  },
-];
-
-const WHY_CHOOSE_US = [
-  {
-    title: "Category 'A' Licensed Agency",
-    desc: "Officially certified by the Directorate of Maharashtra Fire Services for execution of all classes of fire protection works.",
-  },
-  {
-    title: "Over 500+ Corporate Clients",
-    desc: "Trusted by IT parks in Airoli, petrochemical hubs in Taloja, and residential societies across Mumbai.",
-  },
-  {
-    title: "Transparent B2B Invoicing",
-    desc: "Instant GST invoices with complete HSN codes (8424) for 100% eligible Input Tax Credit (ITC).",
-  },
-  {
-    title: "Digital Maintenance Records",
-    desc: "Automated tracking of cylinder inspection dates, refill cycles, and Form B submission deadlines.",
-  },
-];
+import { galleryService } from "@/services/galleryService";
 
 export default function Home() {
   const { t } = useTranslation();
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  const [activeProductTab, setActiveProductTab] = useState<"featured" | "bestseller">("featured");
 
-  // 1. Fetch Categories
-  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery({
+  // Dynamic Banners
+  const { data: banners } = useQuery({
+    queryKey: ["home-banners"],
+    queryFn: () => bannerService.getActiveBanners(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Categories
+  const { data: categories, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ["home-categories"],
     queryFn: () => categoryService.getAll(),
     staleTime: 10 * 60 * 1000,
   });
 
-  // 2. Fetch Featured & Best Selling Products
+  // Featured & Best Sellers
   const { data: featuredData, isLoading: isProductsLoading } = useQuery({
     queryKey: ["home-featured-products"],
     queryFn: () => productService.getFeaturedAndBestSellers(),
-    staleTime: 5 * 60 * 1000,
   });
 
-  // 3. Fetch Real Reviews
-  const { data: recentReviews = [] } = useQuery({
-    queryKey: ["home-recent-reviews"],
-    queryFn: () => reviewService.getRecentApprovedReviews(4),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // 4. Fetch Real Blog Posts
-  const { data: blogData } = useQuery({
+  // Blog posts
+  const { data: blogData, isLoading: isBlogLoading } = useQuery({
     queryKey: ["home-blog-posts"],
     queryFn: () => blogService.getPublishedPosts({ limit: 3 }),
-    staleTime: 10 * 60 * 1000,
   });
-  const blogPosts = blogData?.items || [];
 
-  // 5. Fetch Real FAQs
-  const { data: faqs = [] } = useQuery({
+  // FAQs
+  const { data: faqs } = useQuery({
     queryKey: ["home-faqs"],
     queryFn: () => faqService.getPublicFaqs(),
-    staleTime: 15 * 60 * 1000,
   });
+
+  // Gallery
+  const { data: galleryData } = useQuery({
+    queryKey: ["home-gallery"],
+    queryFn: () => galleryService.getGalleryItems({ limit: 6 }),
+  });
+
+  const promoStrip = banners?.find((b) => b.position === "promo_strip");
+  const heroBanners = banners?.filter((b) => b.position === "home_hero");
+  const heroBanner = heroBanners && heroBanners.length > 0 ? heroBanners[0] : null;
+  const secondaryBanner = banners?.find(
+    (b) => b.position === "home_secondary" || b.position === "home_middle"
+  );
+
+  const displayedProducts =
+    activeProductTab === "featured"
+      ? featuredData?.featured || []
+      : featuredData?.bestSellers || [];
 
   return (
     <>
       <Seo
-        title="AK Fire Safety Service — Fire Extinguishers, Hydrants, Suppression & AMC in Navi Mumbai"
-        description="Navi Mumbai's premier Category 'A' licensed fire safety supplier and contractor. ISI fire extinguishers, automatic suppression systems, Form B certification, and commercial AMC."
+        title="Shubam Fire Protection — Professional Fire Protection & Safety Solutions"
+        description="Shubam Fire Protection is a licensed fire engineering contractor and equipment supplier in Navi Mumbai & Maharashtra. ISI-certified extinguishers, suppression systems, refilling, and statutory Form B AMC inspection."
       />
 
-      {/* 1. Hero / Banner Carousel from Real Admin Database */}
-      <BannerCarousel position="home_hero" />
+      {/* Promotional Top Announcement Strip if configured in backend */}
+      {promoStrip && (
+        <aside
+          aria-label="Announcement"
+          className="bg-primary-700 text-white py-2 px-4 text-xs font-semibold text-center flex flex-wrap items-center justify-center gap-2 shadow-xs"
+        >
+          <span className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-orange-300" />
+            <span>{promoStrip.title}</span>
+          </span>
+          {promoStrip.subtitle && <span className="opacity-80">&bull; {promoStrip.subtitle}</span>}
+          {promoStrip.link && (
+            <Link
+              to={promoStrip.link}
+              className="underline hover:text-orange-200 ml-2 font-bold inline-flex items-center gap-1"
+            >
+              <span>{promoStrip.buttonText || "Explore Details"}</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          )}
+        </aside>
+      )}
 
-      {/* 2. Statutory Pillars / Trust Bar */}
-      <section className="bg-ink border-b border-white/10 text-white py-6">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {STATUTORY_PILLARS.map((p, idx) => (
-              <div key={idx} className="flex items-start gap-3">
-                <div className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-amber shrink-0">
-                  <p.icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">{p.title}</h4>
-                  <p className="text-[11px] text-white/60 mt-0.5 leading-snug">{p.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Section 1: Top Statutory Trust Bar */}
+      <TrustBar />
 
-      {/* 3. Shop by Fire Safety Category */}
-      <section className="max-w-6xl mx-auto px-4 py-16">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
-          <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-brand mb-1">
-              <Flame className="w-3.5 h-3.5" /> Equipment Categories
+      {/* Section 3: Dynamic Hero / Banner */}
+      <section className="relative bg-dark text-white overflow-hidden py-16 sm:py-20 lg:py-24 border-b border-slate-800">
+        {/* Subtle background glow */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary-700/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 right-0 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          <div className="lg:col-span-7 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-orange-400 text-xs font-bold uppercase tracking-wider max-w-full">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="truncate">Govt. Approved Licensed Fire Agency &bull; Navi Mumbai</span>
             </div>
-            <h2 className="font-display text-2xl sm:text-4xl font-bold text-ink tracking-tight">
-              Certified Fire Protection Systems
-            </h2>
-            <p className="text-steel text-xs sm:text-sm mt-1 max-w-xl">
-              Engineered according to Indian Standard codes and National Building Code (NBC Part IV) specifications.
+
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold font-display tracking-tight text-white leading-[1.12] break-words">
+              {heroBanner?.title ||
+                "Industrial-Grade Fire Protection Engineered for Zero Failure"}
+            </h1>
+
+            <p className="text-slate-300 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl break-words">
+              {heroBanner?.subtitle ||
+                "From ISI-marked extinguishers and automatic clean-agent suppression to half-yearly Form B compliance certification, Shubam Fire Protection safeguards industrial plants, commercial towers, and communities across Maharashtra."}
             </p>
-          </div>
-          <Link
-            to="/products"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand hover:text-brand-dark transition-colors shrink-0"
-          >
-            <span>Explore All Categories</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
 
-        {isCategoriesLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <div key={idx} className="h-44 bg-paper rounded-xl border border-black/10 animate-pulse" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {categories.slice(0, 8).map((cat) => (
-              <Link
-                key={cat._id}
-                to={`/products/${cat.slug}`}
-                className="group bg-white rounded-xl border border-black/10 p-4 hover:border-brand/40 hover:shadow-lg transition-all flex flex-col justify-between"
-              >
-                <div className="aspect-square bg-paper rounded-lg mb-3 overflow-hidden flex items-center justify-center p-3 relative">
-                  <img
-                    src={
-                      cat.image ||
-                      "https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&w=400&q=80"
-                    }
-                    alt={cat.name}
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src =
-                        "https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&w=400&q=80";
-                    }}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {cat.productCount !== undefined && cat.productCount > 0 && (
-                    <span className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm">
-                      {cat.productCount} models
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-ink group-hover:text-brand transition-colors line-clamp-1">
-                    {cat.name}
-                  </h3>
-                  <p className="text-[11px] text-steel mt-0.5 line-clamp-2 leading-tight">
-                    {cat.description || "Certified fire safety products conforming to BIS standards"}
-                  </p>
-                  <span className="text-[11px] text-brand font-semibold mt-2.5 inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                    View equipment &rarr;
-                  </span>
-                </div>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-2 w-full sm:w-auto">
+              <Link to={heroBanner?.link || "/request-quote"} className="w-full sm:w-auto">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="w-full sm:w-auto justify-center"
+                  leftIcon={<FileSpreadsheet className="w-4 h-4" />}
+                  rightIcon={<ArrowRight className="w-4 h-4" />}
+                >
+                  {heroBanner?.buttonText || "Request B2B Quote"}
+                </Button>
               </Link>
-            ))}
-          </div>
-        )}
-      </section>
 
-      {/* 4. Best Selling / Popular Products */}
-      {featuredData?.bestSellers && featuredData.bestSellers.length > 0 && (
-        <section className="bg-paper py-16 border-y border-black/10">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-brand">Fast Moving Stock</span>
-                <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink mt-0.5">
-                  Best Selling Fire Protection Equipment
-                </h2>
-                <p className="text-steel text-xs sm:text-sm mt-0.5">
-                  High-demand industrial extinguishers, hydrant accessories, and alarm panels with ready inventory.
-                </p>
-              </div>
-              <Link
-                to="/products?sort=bestseller"
-                className="text-xs sm:text-sm font-bold text-brand hover:text-brand-dark flex items-center gap-1 shrink-0"
-              >
-                See All Best Sellers <ArrowRight className="w-4 h-4" />
+              <Link to="/services/amc" className="w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full sm:w-auto justify-center border-slate-600 bg-white/5 text-white hover:bg-white/10 hover:border-slate-500"
+                  leftIcon={<ShieldCheck className="w-4 h-4 text-emerald-400" />}
+                >
+                  AMC &amp; Form B Plans
+                </Button>
+              </Link>
+
+              <Link to="/products" className="w-full sm:w-auto">
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  className="w-full sm:w-auto justify-center text-slate-300 hover:text-white hover:bg-white/5"
+                >
+                  Browse Catalog &rarr;
+                </Button>
               </Link>
             </div>
 
-            {isProductsLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {Array.from({ length: 4 }).map((_, idx) => (
-                  <div key={idx} className="h-80 bg-white rounded-xl border border-black/10 animate-pulse" />
-                ))}
+            {/* Quick Metrics */}
+            <div className="pt-6 sm:pt-8 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
+              <div className="flex sm:block items-center justify-between sm:justify-start gap-2">
+                <span className="block text-2xl sm:text-3xl font-extrabold font-display text-white">
+                  100%
+                </span>
+                <span className="text-xs text-slate-400 sm:mt-0.5 block">
+                  ISI &amp; BIS Certified Gear
+                </span>
+              </div>
+              <div className="flex sm:block items-center justify-between sm:justify-start gap-2">
+                <span className="block text-2xl sm:text-3xl font-extrabold font-display text-white">
+                  35 kg/cm²
+                </span>
+                <span className="text-xs text-slate-400 sm:mt-0.5 block">
+                  Hydro-Testing Pressure
+                </span>
+              </div>
+              <div className="flex sm:block items-center justify-between sm:justify-start gap-2">
+                <span className="block text-2xl sm:text-3xl font-extrabold font-display text-white">
+                  Form B
+                </span>
+                <span className="text-xs text-slate-400 sm:mt-0.5 block">
+                  Municipal Compliance Cleared
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Hero Visual / Banner Graphic */}
+          <div className="lg:col-span-5">
+            {heroBanner?.image ? (
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-700 aspect-[4/3] group">
+                <img
+                  src={heroBanner.image}
+                  alt={heroBanner.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-transparent to-transparent flex items-end p-6">
+                  <div className="text-white">
+                    <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider">
+                      Featured Equipment
+                    </p>
+                    <p className="text-lg font-bold font-display mt-1">{heroBanner.title}</p>
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {featuredData.bestSellers.slice(0, 4).map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))}
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-700 bg-slate-900 p-5 sm:p-8 space-y-4 sm:space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div className="flex items-center gap-2 text-white">
+                    <Flame className="w-5 h-5 text-primary-500 shrink-0" />
+                    <span className="font-bold text-xs sm:text-sm font-display uppercase tracking-wider">
+                      STATUTORY ACCREDITATION
+                    </span>
+                  </div>
+                  <span className="text-xs px-2.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 font-semibold shrink-0">
+                    Category A
+                  </span>
+                </div>
+
+                <div className="space-y-3.5 text-xs text-slate-300">
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-white">Maharashtra Fire Services Licensed Agency</p>
+                      <p className="text-slate-400 mt-0.5">Authorised to conduct bi-annual Form B testing and certification.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-white">IS 15683 &amp; IS 2190 Factory Specification</p>
+                      <p className="text-slate-400 mt-0.5">Automated gas filling, hydrostatic pressure checks, and hologram seals.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-white">ISO 9001:2015 Quality Management</p>
+                      <p className="text-slate-400 mt-0.5">Comprehensive audit trail with equipment QR code tracking.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Link
+                    to="/book-service"
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-primary-700 hover:bg-primary-800 text-white font-bold text-xs transition-colors shadow-md"
+                  >
+                    <Wrench className="w-4 h-4 text-orange-300 shrink-0" />
+                    <span>Schedule On-Site Technician Inspection</span>
+                  </Link>
+                </div>
               </div>
             )}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* 5. Promotional Banner from Backend (Position: 'home_middle' or 'deals') */}
-      <PromoBanner position="home_middle" />
-
-      {/* 6. Featured Products Section */}
-      {featuredData?.featured && featuredData.featured.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 py-16">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-brand">Industrial Grade</span>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink mt-0.5">
-                Featured Engineered Systems
-              </h2>
-              <p className="text-steel text-xs sm:text-sm mt-0.5">
-                Heavy-duty commercial fire fighting equipment recommended by licensed safety auditors.
+      {/* Section 4: Quick Actions Bar */}
+      <section className="relative -mt-6 z-20 max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <Link
+            to="/request-quote"
+            className="p-4 sm:p-5 rounded-xl bg-white border border-slate-200 shadow-card hover:shadow-hover hover:border-primary-300 transition-all group flex items-start gap-3.5 sm:gap-4"
+          >
+            <div className="p-2.5 sm:p-3 rounded-xl bg-primary-50 text-primary-700 group-hover:bg-primary-700 group-hover:text-white transition-colors shrink-0">
+              <FileSpreadsheet className="w-5 sm:w-6 h-5 sm:h-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold font-display text-dark group-hover:text-primary-700 transition-colors">
+                Request B2B Quote
+              </p>
+              <p className="text-xs text-slate-500 mt-1 leading-snug">
+                Volume pricing for factories, warehouses, &amp; societies
               </p>
             </div>
-            <Link
-              to="/products?isFeatured=true"
-              className="text-xs sm:text-sm font-bold text-brand hover:text-brand-dark flex items-center gap-1 shrink-0"
-            >
-              View Featured Catalog <ArrowRight className="w-4 h-4" />
+          </Link>
+
+          <Link
+            to="/services/refilling"
+            className="p-4 sm:p-5 rounded-xl bg-white border border-slate-200 shadow-card hover:shadow-hover hover:border-primary-300 transition-all group flex items-start gap-3.5 sm:gap-4"
+          >
+            <div className="p-2.5 sm:p-3 rounded-xl bg-orange-50 text-orange-700 group-hover:bg-orange-600 group-hover:text-white transition-colors shrink-0">
+              <FlameKindling className="w-5 sm:w-6 h-5 sm:h-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold font-display text-dark group-hover:text-primary-700 transition-colors">
+                Cylinder Refill &amp; Hydro-Test
+              </p>
+              <p className="text-xs text-slate-500 mt-1 leading-snug">
+                Calibrated 35 kg/cm² pressure testing with pickup
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            to="/services/amc"
+            className="p-4 sm:p-5 rounded-xl bg-white border border-slate-200 shadow-card hover:shadow-hover hover:border-primary-300 transition-all group flex items-start gap-3.5 sm:gap-4"
+          >
+            <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white transition-colors shrink-0">
+              <ShieldCheck className="w-5 sm:w-6 h-5 sm:h-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold font-display text-dark group-hover:text-primary-700 transition-colors">
+                Biannual AMC &amp; Form B
+              </p>
+              <p className="text-xs text-slate-500 mt-1 leading-snug">
+                Official statutory municipal clearance certification
+              </p>
+            </div>
+          </Link>
+
+          <a
+            href="tel:+919800000000"
+            className="p-4 sm:p-5 rounded-xl bg-white border border-slate-200 shadow-card hover:shadow-hover hover:border-primary-300 transition-all group flex items-start gap-3.5 sm:gap-4"
+          >
+            <div className="p-2.5 sm:p-3 rounded-xl bg-red-50 text-red-700 group-hover:bg-red-600 group-hover:text-white transition-colors shrink-0">
+              <Phone className="w-5 sm:w-6 h-5 sm:h-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold font-display text-dark group-hover:text-primary-700 transition-colors">
+                24/7 Emergency Support
+              </p>
+              <p className="text-xs text-slate-500 mt-1 leading-snug">
+                Direct hotline to active fire engineering cell
+              </p>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      {/* Section 6: Services Showcase */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+        <SectionHeader
+          badge="OUR CORE ENGINEERING SERVICES"
+          badgeTone="primary"
+          title="Certified Fire Protection & Maintenance"
+          subtitle="All engineering services performed strictly under Maharashtra Fire Prevention and Life Safety Measures Act rules by licensed technicians."
+          actions={
+            <Link to="/services">
+              <Button variant="outline" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
+                View All Services
+              </Button>
             </Link>
+          }
+        />
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ServiceCard
+            title="Annual Maintenance Contracts (AMC)"
+            description="Biannual statutory inspections, preventative servicing, hydraulic line flushing, and Form B compliance certification."
+            href="/services/amc"
+            icon={<ShieldCheck className="w-6 h-6" />}
+            highlights={[
+              "Biannual Form B certification",
+              "Quarterly valve & pressure checks",
+              "Digital compliance register",
+            ]}
+            ctaText="Explore AMC Plans"
+            badge="STATUTORY"
+          />
+
+          <ServiceCard
+            title="Cylinder Refilling & Hydro-Testing"
+            description="Calibrated electronic refilling for ABC powder, CO2, foam, and clean agents with 35 kg/cm² hydrostatic pressure vessel testing."
+            href="/services/refilling"
+            icon={<FlameKindling className="w-6 h-6" />}
+            highlights={[
+              "Hydrostatic test certificate",
+              "ISI calibrated gas refills",
+              "Free doorstep pickup & delivery",
+            ]}
+            ctaText="Book Refill Service"
+            badge="CERTIFIED"
+          />
+
+          <ServiceCard
+            title="Building Fire Safety Audits"
+            description="Detailed structural risk assessment, evacuation plan reviews, fire hazard scoring, and compliance roadmaps for commercial towers."
+            href="/services/fire-safety-audit"
+            icon={<FileCheck className="w-6 h-6" />}
+            highlights={[
+              "NBC 2016 Part IV audit",
+              "Emergency egress verification",
+              "Executive compliance report",
+            ]}
+            ctaText="Schedule Safety Audit"
+          />
+
+          <ServiceCard
+            title="Turnkey Hydrant & Sprinkler Installation"
+            description="End-to-end engineering, fabrication, and commissioning of wet riser systems, landing valves, hose reels, and deluge networks."
+            href="/services/installation"
+            icon={<Wrench className="w-6 h-6" />}
+            highlights={[
+              "Fabrication & pressure testing",
+              "Automatic jockey & main pumps",
+              "Municipal NOC assistance",
+            ]}
+            ctaText="View Installation Solutions"
+          />
+
+          <ServiceCard
+            title="Gas Suppression Systems (FM-200 & Novec)"
+            description="Zero-residue automatic total flooding systems engineered specifically for server rooms, data centers, and electrical panel rooms."
+            href="/services/installation"
+            icon={<Award className="w-6 h-6" />}
+            highlights={[
+              "FM-200 / FK-5-1-12 clean agents",
+              "UL/FM listed discharge nozzles",
+              "Fast 10-second suppression",
+            ]}
+            ctaText="Suppression Solutions"
+          />
+
+          <ServiceCard
+            title="Testing, Diagnostics & Flow Rate Analysis"
+            description="Rigorous pump performance curves, hydrant nozzle pressure verification, alarm panel loop testing, and fault clearance."
+            href="/services/inspection"
+            icon={<CheckCircle2 className="w-6 h-6" />}
+            highlights={[
+              "Calibrated pitot tube flow checks",
+              "Smoke & heat detector sensitivity",
+              "Diagnostic certification report",
+            ]}
+            ctaText="Request Testing Visit"
+          />
+        </div>
+      </section>
+
+      {/* Section 7: Featured Products & Best Sellers Tabs */}
+      <section className="bg-slate-50 py-20 border-y border-slate-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-primary-700">
+                ISI-CERTIFIED SAFETY EQUIPMENT
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-display text-dark tracking-tight mt-1">
+                Industrial Fire Protection Catalog
+              </h2>
+            </div>
+
+            {/* Switcher tabs */}
+            <div className="flex items-center gap-1.5 sm:gap-2 p-1 bg-white border border-slate-200 rounded-xl shadow-2xs w-full sm:w-auto">
+              <button
+                onClick={() => setActiveProductTab("featured")}
+                className={`flex-1 sm:flex-none text-center px-3.5 sm:px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                  activeProductTab === "featured"
+                    ? "bg-primary-700 text-white shadow-xs"
+                    : "text-slate-600 hover:text-dark"
+                }`}
+              >
+                Featured Equipment
+              </button>
+              <button
+                onClick={() => setActiveProductTab("bestseller")}
+                className={`flex-1 sm:flex-none text-center px-3.5 sm:px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                  activeProductTab === "bestseller"
+                    ? "bg-primary-700 text-white shadow-xs"
+                    : "text-slate-600 hover:text-dark"
+                }`}
+              >
+                Best Sellers
+              </button>
+            </div>
           </div>
 
+          {/* Product Grid */}
           {isProductsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {Array.from({ length: 4 }).map((_, idx) => (
-                <div key={idx} className="h-80 bg-white rounded-xl border border-black/10 animate-pulse" />
+                <ProductCardSkeleton key={idx} />
               ))}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {featuredData.featured.slice(0, 4).map((product) => (
+          ) : displayedProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {displayedProducts.slice(0, 8).map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}
             </div>
-          )}
-        </section>
-      )}
-
-      {/* 7. Comprehensive Fire Safety Services Grid */}
-      <section className="bg-ink text-white py-16 border-y border-white/10">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-            <div className="max-w-xl">
-              <span className="text-xs font-bold uppercase tracking-widest text-amber">
-                Licensed Field Engineering
-              </span>
-              <h2 className="font-display text-2xl sm:text-4xl font-bold mt-1 text-white">
-                Turnkey Fire Safety Contracting &amp; Testing
-              </h2>
-              <p className="text-white/70 text-xs sm:text-sm mt-2 leading-relaxed">
-                Category &lsquo;A&rsquo; certified engineers and equipped service vans delivering prompt on-site
-                inspections, pressure diagnostics, and Form B statutory filings across Navi Mumbai.
+          ) : (
+            <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
+              <p className="text-slate-500 text-sm">
+                No products found in this section. Browse the full catalog below.
               </p>
             </div>
-            <Link
-              to="/book-service"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-bold shadow transition-colors shrink-0"
-            >
-              <Wrench className="w-4 h-4" /> Book Technician Visit
+          )}
+
+          <div className="text-center mt-10">
+            <Link to="/products">
+              <Button variant="outline" size="md" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                Explore Complete 50+ Product Catalog
+              </Button>
             </Link>
           </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[
-              {
-                href: "/services/amc",
-                badge: "Statutory Mandate",
-                title: "Annual Maintenance Contracts (AMC)",
-                desc: "Quarterly preventative maintenance, pump room test runs, and Form B compliance filings for housing societies and commercial towers.",
-              },
-              {
-                href: "/services/refilling",
-                badge: "On-Site & Workshop",
-                title: "Cylinder Refilling & Hydro-Testing",
-                desc: "Certified refilling with pure MAP-50 powder and CO2 gas, backed by PESO-approved 250 bar hydraulic pressure test certificates.",
-              },
-              {
-                href: "/services/fire-safety-audit",
-                badge: "Licensed Audit",
-                title: "Comprehensive Fire Safety Audits",
-                desc: "Full structural audit analyzing egress routes, passive containment, detection coverage, and compliance with Maharashtra Fire Act.",
-              },
-              {
-                href: "/services/installation",
-                badge: "Turnkey Contracting",
-                title: "FM-200 & Hydrant Installations",
-                desc: "Complete layout design, wet riser plumbing, jockey pump setups, and automatic clean agent flooding for server rooms and factories.",
-              },
-              {
-                href: "/services/inspection",
-                badge: "Diagnostic Testing",
-                title: "Smoke Detector & Alarm Testing",
-                desc: "Functional testing of addressable panels, beam detectors, manual call points, and integration with emergency PA systems.",
-              },
-              {
-                href: "/request-quote",
-                badge: "B2B Procurement",
-                title: "B2B Project RFQ & Estimations",
-                desc: "Upload equipment bill of quantities (BOQ) or blueprint specifications for guaranteed commercial quote dispatch within 2 hours.",
-              },
-            ].map((s, idx) => (
-              <Link
-                key={idx}
-                to={s.href}
-                className="group bg-white/5 border border-white/10 rounded-xl p-6 hover:border-amber/60 hover:bg-white/10 transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-amber bg-amber/10 border border-amber/20 px-2 py-0.5 rounded mb-3">
-                    {s.badge}
-                  </span>
-                  <h3 className="font-bold text-base text-white group-hover:text-amber transition-colors">
-                    {s.title}
-                  </h3>
-                  <p className="text-xs text-white/70 mt-2 leading-relaxed">{s.desc}</p>
-                </div>
-                <div className="pt-4 mt-4 border-t border-white/10 flex items-center justify-between text-xs text-amber font-semibold">
-                  <span>Explore service specifications</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Link>
-            ))}
-          </div>
         </div>
       </section>
 
-      {/* 8. Statutory AMC & Form B Compliance Section */}
-      <section className="py-16 bg-white border-b border-black/10">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 text-brand text-xs font-bold uppercase tracking-wider mb-4">
-                <FileCheck className="w-4 h-4" /> Maharashtra Fire Safety Act Compliance
-              </div>
-              <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-ink tracking-tight leading-tight">
-                Mandatory Bi-Annual Form B Certification for Navi Mumbai Buildings
-              </h2>
-              <p className="mt-3 text-steel text-sm leading-relaxed">
-                Under Section 3(1) of the Maharashtra Fire Prevention and Life Safety Measures Act, all commercial
-                premises, factories, and housing societies must submit Form B twice a year (January &amp; July) to the
-                local Fire Prevention Wing.
-              </p>
+      {/* Section 8: Equipment Categories */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+        <SectionHeader
+          badge="COMPREHENSIVE CATALOG"
+          title="Browse Equipment by Classification"
+          subtitle="Every unit is stamped with ISI / CE certifications and comes complete with mounting brackets, inspection tags, and warranty documentation."
+          actions={
+            <Link to="/products">
+              <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
+                All Categories &rarr;
+              </Button>
+            </Link>
+          }
+        />
 
-              <div className="mt-6 space-y-3">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-safe shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-xs font-bold text-ink block">Category 'A' Licensed Sign-Off</strong>
-                    <span className="text-xs text-steel">Official testing and digital certificate recognized by NMMC, CIDCO, and MIDC fire departments.</span>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-safe shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-xs font-bold text-ink block">Quarterly Scheduled System Runs</strong>
-                    <span className="text-xs text-steel">We test jockey pumps, main hydrants, sprinkler loops, and hose reels to ensure 100% operational readiness.</span>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-safe shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-xs font-bold text-ink block">Zero Penalty Guarantee</strong>
-                    <span className="text-xs text-steel">Automatic compliance alerts and timely inspection scheduling eliminate municipal non-compliance notices.</span>
-                  </div>
-                </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+          {categories?.slice(0, 8).map((cat) => (
+            <Link
+              key={cat._id}
+              to={`/products/${cat.slug}`}
+              className="group bg-white rounded-xl sm:rounded-2xl border border-slate-200 p-3 sm:p-5 hover:border-slate-300 hover:shadow-hover transition-all duration-200 flex flex-col justify-between"
+            >
+              <div className="aspect-square bg-slate-50 rounded-lg sm:rounded-xl mb-3 sm:mb-4 overflow-hidden flex items-center justify-center p-2.5 sm:p-4 border border-slate-100 group-hover:border-primary-100 transition-colors">
+                <img
+                  src={
+                    cat.image ||
+                    "https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&w=400&q=80"
+                  }
+                  alt={cat.name}
+                  loading="lazy"
+                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                />
               </div>
-
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Link
-                  to="/services/amc"
-                  className="px-6 py-3 bg-brand hover:bg-brand-dark text-white rounded-lg font-bold text-xs shadow-md transition-colors inline-flex items-center gap-2"
-                >
-                  View AMC Packages &rarr;
-                </Link>
-                <Link
-                  to="/request-quote"
-                  className="px-6 py-3 bg-paper hover:bg-gray-200 text-ink border border-black/10 rounded-lg font-semibold text-xs transition-colors inline-flex items-center gap-1.5"
-                >
-                  <FileSpreadsheet className="w-4 h-4 text-brand" /> Get Form B Proposal
-                </Link>
-              </div>
-            </div>
-
-            <div className="bg-paper rounded-2xl border border-black/10 p-6 sm:p-8 space-y-6 shadow-sm">
-              <div className="flex items-center justify-between border-b border-black/10 pb-4">
-                <div>
-                  <h4 className="font-display font-bold text-lg text-ink">Form B Bi-Annual Cycle</h4>
-                  <p className="text-[11px] text-steel">Statutory timelines for commercial &amp; high-rise buildings</p>
-                </div>
-                <span className="px-2.5 py-1 bg-amber/20 text-ink rounded font-mono font-bold text-xs">
-                  2026 Season
+              <div className="min-w-0">
+                <h3 className="font-bold text-xs sm:text-sm text-dark group-hover:text-primary-700 transition-colors truncate">
+                  {cat.name}
+                </h3>
+                <p className="text-[11px] sm:text-xs text-slate-500 mt-1 line-clamp-2">
+                  {cat.description || "ISI certified fire safety equipment"}
+                </p>
+                <span className="text-[11px] sm:text-xs font-semibold text-primary-700 mt-2 sm:mt-3 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Browse Gear <ChevronRight className="w-3 h-3 shrink-0" />
                 </span>
               </div>
-
-              <div className="space-y-4">
-                <div className="bg-white p-4 rounded-xl border border-black/10 flex items-start gap-3.5">
-                  <div className="p-2 rounded bg-red-50 text-brand font-bold text-xs shrink-0 text-center w-12">
-                    JAN
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-xs text-ink">First Half Statutory Submission</h5>
-                    <p className="text-[11px] text-steel mt-0.5">
-                      Covers January 1st to June 30th. Physical verification of all extinguishers, hydrant risers, and alarm panels.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl border border-black/10 flex items-start gap-3.5">
-                  <div className="p-2 rounded bg-amber-50 text-amber font-bold text-xs shrink-0 text-center w-12">
-                    JUL
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-xs text-ink">Second Half Statutory Submission</h5>
-                    <p className="text-[11px] text-steel mt-0.5">
-                      Covers July 1st to December 31st. Monsoon moisture inspection of electrical alarm wiring and sprinkler line pressure check.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white/80 p-4 rounded-xl border border-amber/30 text-xs text-steel">
-                <p className="font-semibold text-ink flex items-center gap-1.5 mb-1">
-                  <ShieldCheck className="w-4 h-4 text-brand" /> Need Emergency Form B Filing?
-                </p>
-                Our engineering team issues fast-track reports following complete on-site compliance verification.
-              </div>
-            </div>
-          </div>
+            </Link>
+          ))}
         </div>
       </section>
 
-      {/* 9. Why Choose Us / Company Credibility */}
-      <section className="bg-paper py-16">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-widest text-brand">Corporate Credibility</span>
-            <h2 className="font-display text-2xl sm:text-4xl font-bold text-ink mt-1">
-              Why 500+ Facilities Rely On AK Fire Safety
+      {/* Section 10: 4-Step Fire Safety Engineering Process */}
+      <section className="bg-slate-900 text-white py-20 border-y border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <span className="text-xs font-bold uppercase tracking-wider text-orange-400">
+              OUR ENGINEERING WORKFLOW
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold font-display text-white tracking-tight mt-2">
+              How Shubam Fire Protection Secures Your Premises
             </h2>
-            <p className="text-steel text-xs sm:text-sm mt-1">
-              Providing end-to-end statutory fire engineering, equipment procurement, and maintenance services since 2003.
+            <p className="text-slate-400 text-sm sm:text-base mt-3">
+              We follow a strict, disciplined engineering protocol to ensure statutory compliance and complete operational readiness.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {WHY_CHOOSE_US.map((item, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-xl border border-black/10 p-6 hover:shadow-md hover:border-brand/40 transition-all"
-              >
-                <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand font-display font-bold flex items-center justify-center text-base mb-4">
-                  0{idx + 1}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 relative">
+            {[
+              {
+                step: "01",
+                title: "On-Site Risk Audit",
+                desc: "Survey building architecture, electrical hazards, flammable storage, and egress routes per NBC 2016.",
+              },
+              {
+                step: "02",
+                title: "System Design & Supply",
+                desc: "Calculate required extinguishing capacity, pipe sizing, and supply ISI-certified equipment direct from factory.",
+              },
+              {
+                step: "03",
+                title: "Certified Installation",
+                desc: "Technician-led mounting, pressure testing, hydrostatic line verification, and commission sign-off.",
+              },
+              {
+                step: "04",
+                title: "AMC & Form B Clearance",
+                desc: "Scheduled biannual inspection visits, cylinder refilling tracking, and statutory Form B certificate issuance.",
+              },
+            ].map((s, idx) => (
+              <div key={idx} className="relative p-6 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between">
+                <div>
+                  <span className="text-3xl font-extrabold font-display text-primary-500 block mb-3">
+                    {s.step}
+                  </span>
+                  <h3 className="text-lg font-bold font-display text-white mb-2">{s.title}</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">{s.desc}</p>
                 </div>
-                <h3 className="font-bold text-sm text-ink mb-2">{item.title}</h3>
-                <p className="text-xs text-steel leading-relaxed">{item.desc}</p>
+                <div className="mt-6 pt-4 border-t border-white/10 flex items-center text-xs font-semibold text-orange-400">
+                  <span>Step {idx + 1} of 4</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 10. Customer Reviews Section (Real Backend Data) */}
-      {recentReviews.length > 0 && (
-        <section className="bg-white py-16 border-y border-black/10">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-brand">Client Feedback</span>
-                <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink mt-0.5">
-                  Verified Client Reviews &amp; Testimonials
-                </h2>
-                <p className="text-steel text-xs sm:text-sm mt-0.5">
-                  Real feedback from commercial facility managers, plant safety heads, and housing society secretaries.
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5 text-amber text-xs font-bold shrink-0">
-                <div className="flex items-center">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber text-amber" />
-                  ))}
-                </div>
-                <span className="text-ink ml-1 font-mono">4.9 / 5.0</span>
-              </div>
+      {/* Section 11 & 12: Detailed Refilling & AMC Deep-Dive */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Refilling Callout */}
+          <div className="p-5 sm:p-8 lg:p-10 rounded-2xl bg-white border border-slate-200 shadow-card space-y-4 sm:space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-bold uppercase tracking-wider border border-orange-200 max-w-full">
+              <FlameKindling className="w-4 h-4 text-accent shrink-0" />
+              <span className="truncate">Calibrated Workshop Facility</span>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {recentReviews.map((rev) => (
-                <div
-                  key={rev._id}
-                  className="bg-paper rounded-xl border border-black/10 p-5 flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center gap-1 text-amber mb-2">
-                      {Array.from({ length: rev.rating || 5 }).map((_, i) => (
-                        <Star key={i} className="w-3.5 h-3.5 fill-amber text-amber" />
-                      ))}
-                    </div>
-                    <h4 className="font-bold text-xs text-ink line-clamp-1">{rev.title}</h4>
-                    <p className="text-xs text-steel mt-1.5 line-clamp-3 leading-relaxed">
-                      &ldquo;{rev.comment}&rdquo;
-                    </p>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-black/10 flex items-center justify-between text-[11px]">
-                    <div>
-                      <span className="font-bold text-ink block">{rev.userName}</span>
-                      <span className="text-steel text-[10px]">
-                        {new Date(rev.createdAt).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
-                      </span>
-                    </div>
-                    {rev.isVerifiedPurchase && (
-                      <span className="text-[10px] bg-safe/10 text-safe font-semibold px-2 py-0.5 rounded flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Verified
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold font-display text-dark tracking-tight break-words">
+              Hydrostatic Pressure Testing &amp; Cylinder Refilling
+            </h3>
 
-      {/* 11. Blog & Fire Safety Knowledge Hub (Real Backend Data) */}
-      {blogPosts.length > 0 && (
-        <section className="py-16 bg-paper">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-brand">Safety Knowledge</span>
-                <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink mt-0.5">
-                  Articles, Compliance Norms &amp; Technical Guides
-                </h2>
-                <p className="text-steel text-xs sm:text-sm mt-0.5">
-                  Stay updated with latest BIS standards, IS 2190 guidelines, and municipal compliance notifications.
-                </p>
-              </div>
-              <Link
-                to="/blog"
-                className="text-xs sm:text-sm font-bold text-brand hover:text-brand-dark flex items-center gap-1 shrink-0"
-              >
-                Browse All Articles <ArrowRight className="w-4 h-4" />
+            <p className="text-slate-600 text-sm leading-relaxed">
+              Uncertified refills are dangerous. At Shubam Fire Protection, every cylinder undergoing refilling undergoes hydrostatic pressure testing up to 35 kg/cm², ultrasonic wall thickness verification, and precision electronic powder charging.
+            </p>
+
+            <ul className="space-y-2.5 text-xs text-slate-700 font-medium">
+              <li className="flex items-start sm:items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
+                <span>IS 2190 compliant hydrostatic test certification</span>
+              </li>
+              <li className="flex items-start sm:items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
+                <span>Replacement of tamper seals, O-rings, and safety pins</span>
+              </li>
+              <li className="flex items-start sm:items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
+                <span>Free standby backup cylinders provided during service</span>
+              </li>
+            </ul>
+
+            <div className="pt-2 sm:pt-4">
+              <Link to="/services/refilling" className="inline-block w-full sm:w-auto">
+                <Button variant="primary" size="md" className="w-full sm:w-auto justify-center" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                  Book Cylinder Refilling
+                </Button>
               </Link>
             </div>
+          </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {blogPosts.map((post) => (
-                <Link
-                  key={post._id}
-                  to={`/blog/${post.slug}`}
-                  className="group bg-white rounded-xl border border-black/10 overflow-hidden hover:shadow-lg hover:border-brand/40 transition-all flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="aspect-video bg-paper overflow-hidden">
-                      <img
-                        src={
-                          post.featuredImage ||
-                          "https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&w=800&q=80"
-                        }
-                        alt={post.title}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-5">
-                      <div className="flex items-center gap-2 text-[11px] text-steel mb-2">
-                        <span className="bg-brand/10 text-brand font-semibold px-2 py-0.5 rounded">
-                          {post.category}
-                        </span>
-                        <span>&bull;</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> {post.readTime || 5} min read
-                        </span>
-                      </div>
-                      <h3 className="font-bold text-sm sm:text-base text-ink group-hover:text-brand transition-colors line-clamp-2 leading-snug">
-                        {post.title}
-                      </h3>
-                      <p className="text-xs text-steel mt-2 line-clamp-2 leading-relaxed">
-                        {post.excerpt}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="px-5 pb-5 pt-2 flex items-center justify-between text-xs text-brand font-semibold">
-                    <span>Read safety guide</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </Link>
-              ))}
+          {/* AMC & Form B Callout */}
+          <div className="p-5 sm:p-8 lg:p-10 rounded-2xl bg-white border border-slate-200 shadow-card space-y-4 sm:space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider border border-emerald-200 max-w-full">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="truncate">Statutory Municipal Mandate</span>
+            </div>
+
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold font-display text-dark tracking-tight break-words">
+              Biannual AMC &amp; Form B Compliance Certification
+            </h3>
+
+            <p className="text-slate-600 text-sm leading-relaxed">
+              Under the Maharashtra Fire Prevention and Life Safety Measures Act, all commercial premises and high-rises must submit Form B twice a year (January and July) certified by a Licensed Agency.
+            </p>
+
+            <ul className="space-y-2.5 text-xs text-slate-700 font-medium">
+              <li className="flex items-start sm:items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
+                <span>Issued directly by Licensed Agency Category &lsquo;A&rsquo;</span>
+              </li>
+              <li className="flex items-start sm:items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
+                <span>Complete pump, riser, alarm and extinguisher inspection</span>
+              </li>
+              <li className="flex items-start sm:items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
+                <span>Online customer portal to track all equipment expiry dates</span>
+              </li>
+            </ul>
+
+            <div className="pt-2 sm:pt-4">
+              <Link to="/services/amc" className="inline-block w-full sm:w-auto">
+                <Button variant="secondary" size="md" className="w-full sm:w-auto justify-center" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                  Explore AMC Contract Plans
+                </Button>
+              </Link>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* 12. FAQ Accordion (Real Backend Data) */}
-      {faqs.length > 0 && (
-        <section className="py-16 bg-white border-t border-black/10">
-          <div className="max-w-4xl mx-auto px-4">
-            <div className="text-center mb-10">
-              <span className="text-xs font-bold uppercase tracking-widest text-brand">Help &amp; Clarifications</span>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink mt-0.5">
-                Frequently Asked Fire Safety Questions
-              </h2>
-              <p className="text-steel text-xs sm:text-sm mt-1">
-                Common queries regarding extinguisher refills, AMC scope, Form B compliance, and delivery timelines.
-              </p>
-            </div>
+      {/* Section 13: High-Impact B2B Quote CTA */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        <CTASection
+          title="Procuring for an Industrial Plant, Warehouse, or High-Rise Society?"
+          subtitle="Shubam Fire Protection supplies directly to project developers, MEP contractors, and facility managers across Maharashtra with GST-compliant billing, volume discounts, and turn-key installation."
+          primaryButtonText="Request B2B Project Quotation"
+          primaryButtonHref="/request-quote"
+          secondaryButtonText="Book Site Survey"
+          secondaryButtonHref="/book-service"
+        />
+      </section>
 
-            <div className="space-y-3">
-              {faqs.slice(0, 6).map((faq, idx) => {
-                const isOpen = openFaqIndex === idx;
-                return (
-                  <div
-                    key={faq._id || idx}
-                    className="border border-black/10 rounded-xl overflow-hidden transition-all bg-paper/50"
-                  >
-                    <button
-                      onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                      className="w-full text-left px-5 py-4 flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-ink hover:text-brand transition-colors"
-                      aria-expanded={isOpen}
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <HelpCircle className="w-4 h-4 text-brand shrink-0" />
-                        <span>{faq.question}</span>
-                      </span>
-                      <ChevronDown
-                        className={`w-4 h-4 text-steel shrink-0 transition-transform duration-200 ${
-                          isOpen ? "rotate-180 text-brand" : ""
-                        }`}
-                      />
-                    </button>
-                    {isOpen && (
-                      <div className="px-5 pb-4 pt-1 text-xs text-steel leading-relaxed border-t border-black/5 bg-white">
-                        {faq.answer}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+      {/* Section 14: Safety Knowledge & Blog Resources */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+        <SectionHeader
+          badge="KNOWLEDGE BASE & GUIDES"
+          title="Fire Safety Codes & Insights"
+          subtitle="Stay updated with National Building Code norms, extinguisher selection guides, and statutory compliance updates."
+          actions={
+            <Link to="/blog">
+              <Button variant="outline" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
+                Read All Articles
+              </Button>
+            </Link>
+          }
+        />
 
-            <div className="mt-8 text-center">
-              <Link
-                to="/faq"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-brand hover:underline"
-              >
-                View all frequently asked questions &rarr;
+        {isBlogLoading ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <BlogCardSkeleton key={idx} />
+            ))}
+          </div>
+        ) : blogData?.items && blogData.items.length > 0 ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {blogData.items.slice(0, 3).map((post) => (
+              <BlogCard
+                key={post._id}
+                slug={post.slug}
+                title={post.title}
+                excerpt={post.excerpt}
+                coverImage={post.featuredImage}
+                category={post.category}
+                authorName={post.author?.name || "Technical Cell"}
+                date={post.publishedAt || post.createdAt}
+                readingTime={`${post.readTime || 4} min read`}
+              />
+            ))}
+          </div>
+        ) : null}
+      </section>
+
+      {/* Section 15: FAQ Preview */}
+      {faqs && faqs.length > 0 && (
+        <section className="bg-slate-50 py-20 border-t border-slate-200/80">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <SectionHeader
+              badge="FREQUENTLY ASKED QUESTIONS"
+              title="Common Questions on Fire Safety & Compliance"
+              subtitle="Clear, factual answers regarding extinguisher types, Form B certifications, and service schedules."
+              align="center"
+            />
+
+            <Accordion
+              items={faqs.slice(0, 5).map((f) => ({
+                id: f._id,
+                title: f.question,
+                content: f.answer,
+              }))}
+              defaultOpenIds={[faqs[0]._id]}
+            />
+
+            <div className="text-center mt-10">
+              <Link to="/faq">
+                <Button variant="outline" size="sm">
+                  View All Frequently Asked Questions &rarr;
+                </Button>
               </Link>
             </div>
           </div>
         </section>
       )}
 
-      {/* 13. Strong B2B CTA / Emergency Contact Section */}
-      <section className="bg-gradient-to-r from-ink via-ink/95 to-ink text-white py-16 border-t border-white/10 relative overflow-hidden">
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-brand/10 skew-x-12 pointer-events-none" />
-
-        <div className="max-w-6xl mx-auto px-4 relative z-10">
-          <div className="bg-white/5 border border-white/15 rounded-2xl p-8 sm:p-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 backdrop-blur-sm">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-amber/20 border border-amber/40 text-amber text-xs font-bold uppercase mb-3">
-                <Phone className="w-3.5 h-3.5" /> Rapid Engineering Helpdesk
-              </div>
-              <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-tight">
-                Require Form B Compliance or Fire Equipment Quotation?
-              </h2>
-              <p className="text-white/80 text-xs sm:text-sm mt-2 leading-relaxed">
-                Connect directly with our licensed technical auditors in Navi Mumbai. We provide certified site inspections,
-                formal tender proposals, and bulk GST equipment quotes within 2 business hours.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-6 mt-6 text-xs text-white/90">
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-amber" />
-                  <span><strong>Hotline:</strong> +91 98000 00000</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-amber" />
-                  <span><strong>Workshop:</strong> Turbhe MIDC, Navi Mumbai</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row lg:flex-col gap-3.5 shrink-0 w-full lg:w-auto">
-              <Link
-                to="/request-quote"
-                className="px-6 py-3.5 bg-brand hover:bg-brand-dark text-white rounded-xl font-bold text-xs shadow-lg shadow-brand/30 transition-all text-center inline-flex items-center justify-center gap-2"
-              >
-                <FileSpreadsheet className="w-4 h-4" /> Request Official B2B Quote
+      {/* Section 16: Project Installation Gallery Preview */}
+      {galleryData?.items && galleryData.items.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+          <SectionHeader
+            badge="PORTFOLIO & INSTALLATIONS"
+            title="Real-World Engineering Projects"
+            subtitle="Explore our completed fire hydrant setups, clean agent suppression installations, and testing sessions."
+            actions={
+              <Link to="/gallery">
+                <Button variant="outline" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
+                  View Full Gallery
+                </Button>
               </Link>
-              <Link
-                to="/book-service"
-                className="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-semibold text-xs transition-colors text-center inline-flex items-center justify-center gap-2"
+            }
+          />
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {galleryData.items.slice(0, 6).map((item) => (
+              <div
+                key={item._id}
+                className="group relative rounded-xl overflow-hidden aspect-square bg-slate-100 border border-slate-200 shadow-2xs"
               >
-                <Wrench className="w-4 h-4 text-amber" /> Book On-Site Inspection
-              </Link>
-            </div>
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end text-white">
+                  <p className="font-bold text-xs truncate">{item.title}</p>
+                  <p className="text-[10px] text-slate-300">{item.location || item.category}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Section 17: Service Areas Across Maharashtra */}
+      <section className="bg-white py-16 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <span className="text-xs font-bold uppercase tracking-wider text-primary-700">
+              SERVICE FOOTPRINT
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold font-display text-dark tracking-tight mt-1">
+              Serving Maharashtra’s Key Industrial &amp; Commercial Hubs
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-2">
+              Our mobile service vans provide on-site inspection, refilling pickup, and emergency dispatch across:
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs font-semibold text-slate-700">
+            {[
+              "Navi Mumbai (Vashi, Nerul, Belapur)",
+              "Turbhe & Pawane MIDC",
+              "Taloja Industrial Area",
+              "Mahape Millennium Business Park",
+              "Airoli Mindspace Hub",
+              "Thane & Ghodbunder Road",
+              "Kalyan & Dombivli MIDC",
+              "Bhiwandi Logistics Park",
+              "Panvel & JNPT Port Corridor",
+              "Mumbai MMR Region",
+              "Pune Industrial Corridor",
+            ].map((area, i) => (
+              <span
+                key={i}
+                className="px-2.5 sm:px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-700 shadow-2xs flex items-center gap-1.5 text-[11px] sm:text-xs"
+              >
+                <MapPin className="w-3.5 h-3.5 text-primary-700 shrink-0" />
+                <span>{area}</span>
+              </span>
+            ))}
           </div>
         </div>
       </section>

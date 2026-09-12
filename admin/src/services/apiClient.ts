@@ -18,9 +18,10 @@ apiClient.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const isAuthEndpoint = original?.url?.includes("/auth/login") || original?.url?.includes("/auth/refresh");
 
-    if (error.response?.status === 401 && !original._retry && !isRefreshing) {
-      original._retry = true;
+    if (error.response?.status === 401 && !original?._retry && !isRefreshing && !isAuthEndpoint) {
+      if (original) original._retry = true;
       isRefreshing = true;
       try {
         const { refreshToken } = useAdminAuthStore.getState();

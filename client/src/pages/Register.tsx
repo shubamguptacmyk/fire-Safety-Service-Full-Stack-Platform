@@ -2,15 +2,15 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { authService } from "@/services/authService";
 import Seo from "@/components/Seo";
+import Button from "@/components/ui/Button";
 import {
   AlertCircle,
   Eye,
   EyeOff,
   User,
-  Briefcase,
   Building2,
   Lock,
   Phone,
@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   Loader2,
   ArrowRight,
+  Flame,
 } from "lucide-react";
 
 const schema = z
@@ -26,7 +27,7 @@ const schema = z
     name: z.string().min(2, "Full Name must be at least 2 characters"),
     phone: z
       .string()
-      .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number (e.g. 9876543210)"),
+      .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number (e.g. 9820012345)"),
     email: z
       .string({ required_error: "Email Address is required" })
       .min(1, "Email Address is required")
@@ -60,8 +61,6 @@ const schema = z
 type FormValues = z.infer<typeof schema>;
 
 export default function Register() {
-  const navigate = useNavigate();
-
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
@@ -121,11 +120,12 @@ export default function Register() {
         confirmPassword: values.confirmPassword,
         customerType: values.customerType,
         companyName: isBusinessOrCorporate ? values.companyName?.trim() : undefined,
-        gstNumber: isBusinessOrCorporate && values.gstNumber?.trim() ? values.gstNumber.trim().toUpperCase() : undefined,
+        gstNumber:
+          isBusinessOrCorporate && values.gstNumber?.trim()
+            ? values.gstNumber.trim().toUpperCase()
+            : undefined,
       });
 
-      // DO NOT automatically authenticate the customer yet.
-      // Show "Check Your Email" screen with verification link sent.
       setRegisteredEmail(cleanEmail);
       setResendCooldown(60);
     } catch (err: any) {
@@ -164,32 +164,34 @@ export default function Register() {
     return (
       <div className="max-w-md mx-auto px-4 py-16">
         <Seo
-          title="Check Your Email — AK Fire Safety"
-          description="Verify your email address to activate your AK Fire Safety account."
+          title="Verify Your Email — Shubam Fire Protection"
+          description="Verify your email address to activate your Shubam Fire Protection account."
         />
-        <div className="bg-white rounded-2xl border border-black/10 p-8 shadow-sm text-center">
-          <div className="w-16 h-16 bg-brand/10 text-brand rounded-full flex items-center justify-center mx-auto mb-5">
+        <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-card text-center space-y-4">
+          <div className="w-16 h-16 bg-primary-50 text-primary-700 rounded-full flex items-center justify-center mx-auto mb-2 shadow-2xs border border-primary-100">
             <Mail className="w-8 h-8" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-ink mb-2">Check Your Email</h1>
-          <p className="text-sm text-steel mb-4 leading-relaxed">
-            We've sent a verification link to your email address. Please verify your email to activate your account.
+          <h1 className="font-display text-2xl font-extrabold text-dark">
+            Check Your Email
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">
+            We&apos;ve dispatched a secure account activation link to your email address. Please click the link to activate your customer portal access.
           </p>
-          <div className="bg-surface rounded-xl px-4 py-3 border border-black/10 mb-6 flex items-center justify-center gap-2">
-            <Mail className="w-4 h-4 text-steel shrink-0" />
-            <span className="text-sm font-semibold text-ink break-all">{registeredEmail}</span>
+          <div className="bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 my-4 flex items-center justify-center gap-2">
+            <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+            <span className="text-xs font-bold text-dark break-all">{registeredEmail}</span>
           </div>
 
           {resendNotice && (
             <div
-              className={`p-3 rounded-xl text-xs font-medium mb-4 flex items-center gap-2 text-left ${
+              className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 text-left ${
                 resendNotice.type === "success"
-                  ? "bg-green-50 text-green-800 border border-green-200"
+                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                   : "bg-red-50 text-red-800 border border-red-200"
               }`}
             >
               {resendNotice.type === "success" ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600" />
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
               ) : (
                 <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
               )}
@@ -197,306 +199,233 @@ export default function Register() {
             </div>
           )}
 
-          <div className="space-y-3">
-            <button
-              type="button"
+          <div className="space-y-3 pt-2">
+            <Button
+              variant="outline"
+              size="md"
               disabled={resendCooldown > 0 || resending}
               onClick={handleResendVerification}
-              className="w-full bg-surface hover:bg-black/5 border border-black/15 text-ink py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
+              className="w-full"
+              isLoading={resending}
             >
-              {resending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Sending email...</span>
-                </>
-              ) : resendCooldown > 0 ? (
-                <span>Resend available in {resendCooldown}s</span>
-              ) : (
-                <>
-                  <Mail className="w-4 h-4" />
-                  <span>Resend Verification Email</span>
-                </>
-              )}
-            </button>
+              {resendCooldown > 0
+                ? `Resend available in ${resendCooldown}s`
+                : "Resend Verification Email"}
+            </Button>
 
-            <Link
-              to="/login"
-              state={{ email: registeredEmail }}
-              className="w-full inline-flex items-center justify-center gap-2 bg-brand hover:bg-brand-dark text-white py-2.5 rounded-xl text-sm font-bold transition shadow-sm"
-            >
-              <span>Go to Login</span>
-              <ArrowRight className="w-4 h-4" />
+            <Link to="/login" state={{ email: registeredEmail }} className="block">
+              <Button variant="primary" size="md" className="w-full" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                Proceed to Login
+              </Button>
             </Link>
           </div>
         </div>
       </div>
     );
   }
+
   return (
-    <div className="max-w-lg mx-auto px-4 py-12 sm:py-16">
+    <div className="max-w-xl mx-auto px-4 py-12 sm:py-16">
       <Seo
-        title="Create Account — AK Fire Safety Service"
-        description="Create an account to place orders, request quotes and track your fire safety equipment."
+        title="Create Facility Account — Shubam Fire Protection"
+        description="Register for an account with Shubam Fire Protection to track equipment, request B2B quotes, and schedule Form B AMC inspections."
       />
 
-      <div className="bg-white rounded-2xl border border-black/10 p-6 sm:p-8 shadow-sm">
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-brand/10 text-brand mb-3">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-card space-y-6">
+        <div className="text-center space-y-2">
+          <div className="w-12 h-12 rounded-2xl bg-primary-50 text-primary-700 flex items-center justify-center mx-auto shadow-2xs border border-primary-100">
             <ShieldCheck className="w-6 h-6" />
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink">Create Account</h1>
-          <p className="text-sm text-steel mt-1">Instant registration for individual, business, or corporate accounts.</p>
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-dark tracking-tight">
+            Create Customer Account
+          </h1>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            Direct access to statutory fire equipment records, Form B compliance, and corporate quoting
+          </p>
         </div>
 
         {serverError && (
-          <div role="alert" className="bg-brand/10 border border-brand/20 text-brand text-sm rounded-xl p-3.5 mb-5 flex items-start gap-2.5">
+          <div
+            role="alert"
+            className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-4 flex items-start gap-2.5"
+          >
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
-            <span className="font-medium leading-snug">{serverError}</span>
+            <span className="font-semibold leading-relaxed">{serverError}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-          {/* Customer Type Selector */}
+          {/* Account Type Selector */}
           <div>
-            <label className="text-xs font-semibold text-steel uppercase tracking-wider block mb-1.5">
-              Account Type
+            <label className="block text-xs font-semibold text-slate-700 mb-2">
+              Customer Classification *
             </label>
-            <div className="grid grid-cols-3 gap-1.5 bg-surface p-1 rounded-xl border border-black/10 text-xs">
-              <label className="cursor-pointer">
-                <input type="radio" value="b2c" {...register("customerType")} className="sr-only peer" />
-                <span className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg font-semibold cursor-pointer peer-checked:bg-white peer-checked:text-ink peer-checked:shadow-xs text-steel transition text-center">
-                  <User className="w-3.5 h-3.5 shrink-0" />
-                  <span>Individual</span>
-                </span>
-              </label>
-              <label className="cursor-pointer">
-                <input type="radio" value="b2b" {...register("customerType")} className="sr-only peer" />
-                <span className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg font-semibold cursor-pointer peer-checked:bg-white peer-checked:text-ink peer-checked:shadow-xs text-steel transition text-center">
-                  <Briefcase className="w-3.5 h-3.5 shrink-0" />
-                  <span>Business</span>
-                </span>
-              </label>
-              <label className="cursor-pointer">
-                <input type="radio" value="corporate" {...register("customerType")} className="sr-only peer" />
-                <span className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg font-semibold cursor-pointer peer-checked:bg-white peer-checked:text-ink peer-checked:shadow-xs text-steel transition text-center">
-                  <Building2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Corporate</span>
-                </span>
-              </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {[
+                { id: "b2c", label: "Individual / Residential", icon: User },
+                { id: "b2b", label: "Commercial / Business", icon: Building2 },
+                { id: "corporate", label: "Industrial / Society", icon: ShieldCheck },
+              ].map((t) => (
+                <label
+                  key={t.id}
+                  className={`p-2.5 sm:p-3 rounded-xl border cursor-pointer transition-all flex flex-row sm:flex-col items-center gap-2.5 sm:gap-1.5 text-left sm:text-center ${
+                    customerType === t.id
+                      ? "border-primary-700 bg-primary-50/50 ring-1 ring-primary-700 text-primary-900"
+                      : "border-slate-200 hover:border-slate-300 text-slate-600"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value={t.id}
+                    {...register("customerType")}
+                    className="sr-only"
+                  />
+                  <t.icon className="w-4 h-4 shrink-0" />
+                  <span className="text-xs sm:text-[11px] font-bold leading-tight">{t.label}</span>
+                </label>
+              ))}
             </div>
           </div>
 
-          {/* Full Name */}
-          <div>
-            <label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-ink block">
-              Full Name <span className="text-brand">*</span>
-            </label>
-            <input
-              id="name"
-              type="text"
-              autoComplete="name"
-              placeholder="e.g. Ramesh Patil"
-              {...register("name")}
-              className={`w-full border rounded-xl px-3.5 py-2.5 text-sm mt-1 transition-all focus:outline-none focus:ring-2 ${
-                errors.name
-                  ? "border-brand/50 focus:ring-brand/20 bg-brand/5"
-                  : "border-black/15 focus:ring-brand/20 focus:border-brand"
-              }`}
-              aria-invalid={!!errors.name}
-            />
-            {errors.name && <p className="text-xs text-brand font-medium mt-1">{errors.name.message}</p>}
-          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="name" className="block text-xs font-semibold text-slate-700 mb-1">
+                Contact Person Name *
+              </label>
+              <input
+                id="name"
+                {...register("name")}
+                placeholder="e.g. Rajesh Sharma"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs text-dark focus:border-primary-600 outline-none"
+              />
+              {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>}
+            </div>
 
-          {/* Mobile Number */}
-          <div>
-            <label htmlFor="phone" className="text-xs font-semibold uppercase tracking-wider text-ink block">
-              Mobile Number <span className="text-brand">*</span>
-            </label>
-            <div className="relative mt-1">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-steel pointer-events-none">
-                <Phone className="w-3.5 h-3.5" />
-                <span className="text-xs font-mono font-medium">+91</span>
-              </div>
+            <div>
+              <label htmlFor="phone" className="block text-xs font-semibold text-slate-700 mb-1">
+                Mobile Number *
+              </label>
               <input
                 id="phone"
-                type="tel"
-                autoComplete="tel"
-                maxLength={10}
-                placeholder="9876543210"
                 {...register("phone")}
-                className={`w-full border rounded-xl pl-16 pr-3.5 py-2.5 text-sm font-mono transition-all focus:outline-none focus:ring-2 ${
-                  errors.phone
-                    ? "border-brand/50 focus:ring-brand/20 bg-brand/5"
-                    : "border-black/15 focus:ring-brand/20 focus:border-brand"
-                }`}
-                aria-invalid={!!errors.phone}
+                placeholder="10-digit mobile (e.g. 9820012345)"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs text-dark focus:border-primary-600 outline-none"
               />
+              {errors.phone && <p className="text-xs text-red-600 mt-1">{errors.phone.message}</p>}
             </div>
-            {errors.phone && <p className="text-xs text-brand font-medium mt-1">{errors.phone.message}</p>}
           </div>
 
-          {/* Email Address - REQUIRED */}
           <div>
-            <label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-ink block">
-              Email Address <span className="text-brand">*</span>
+            <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1">
+              Official Email Address *
             </label>
-            <div className="relative mt-1">
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="name@example.com"
-                {...register("email")}
-                className={`w-full border rounded-xl pl-9 pr-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${
-                  errors.email
-                    ? "border-brand/50 focus:ring-brand/20 bg-brand/5"
-                    : "border-black/15 focus:ring-brand/20 focus:border-brand"
-                }`}
-                aria-invalid={!!errors.email}
-              />
-              <Mail className="w-4 h-4 text-steel absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-            {errors.email && <p className="text-xs text-brand font-medium mt-1">{errors.email.message}</p>}
+            <input
+              id="email"
+              type="email"
+              {...register("email")}
+              placeholder="name@company.com"
+              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs text-dark focus:border-primary-600 outline-none"
+            />
+            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>}
           </div>
 
-          {/* Business/Corporate Specific Fields */}
+          {/* Conditional Business Inputs */}
           {isBusinessOrCorporate && (
-            <div className="p-3.5 bg-surface rounded-xl border border-black/10 space-y-3 animate-in fade-in duration-200">
-              <div className="flex items-center gap-2 border-b border-black/5 pb-1.5 text-xs font-bold text-ink">
-                <Building2 className="w-4 h-4 text-brand" />
-                <span>Organization Details</span>
-              </div>
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 grid sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="companyName" className="text-xs font-semibold uppercase tracking-wider text-ink block">
-                  Company Name <span className="text-brand">*</span>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Enterprise / Society Name *
                 </label>
                 <input
-                  id="companyName"
-                  type="text"
-                  placeholder="e.g. Acme Industries Ltd."
                   {...register("companyName")}
-                  className={`w-full border rounded-xl px-3.5 py-2 text-sm bg-white mt-1 transition-all focus:outline-none focus:ring-2 ${
-                    errors.companyName
-                      ? "border-brand/50 focus:ring-brand/20 bg-brand/5"
-                      : "border-black/15 focus:ring-brand/20 focus:border-brand"
-                  }`}
-                  aria-invalid={!!errors.companyName}
+                  placeholder="e.g. Oberoi Woods CHS / Acme Logistics"
+                  className="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs text-dark focus:border-primary-600 outline-none bg-white"
                 />
                 {errors.companyName && (
-                  <p className="text-xs text-brand font-medium mt-1">{errors.companyName.message}</p>
+                  <p className="text-xs text-red-600 mt-1">{errors.companyName.message}</p>
                 )}
               </div>
+
               <div>
-                <div className="flex items-center justify-between">
-                  <label htmlFor="gstNumber" className="text-xs font-semibold uppercase tracking-wider text-ink block">
-                    GST Number <span className="text-steel font-normal text-[11px]">(Optional)</span>
-                  </label>
-                  <span className="text-[11px] text-steel">For 18% GST input credit</span>
-                </div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  GSTIN Number (Optional)
+                </label>
                 <input
-                  id="gstNumber"
-                  type="text"
-                  maxLength={15}
-                  placeholder="27AAAAA0000A1Z5"
                   {...register("gstNumber")}
-                  className="w-full border border-black/15 rounded-xl px-3.5 py-2 text-sm bg-white uppercase font-mono mt-1 transition-all focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                  placeholder="e.g. 27AABCS1234F1Z8"
+                  className="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs text-dark focus:border-primary-600 outline-none uppercase bg-white"
                 />
               </div>
             </div>
           )}
 
-          {/* Password */}
-          <div>
-            <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-ink block">
-              Password <span className="text-brand">*</span>
-            </label>
-            <div className="relative mt-1">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="new-password"
-                placeholder="Minimum 8 characters"
-                {...register("password")}
-                className={`w-full border rounded-xl pl-9 pr-10 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${
-                  errors.password
-                    ? "border-brand/50 focus:ring-brand/20 bg-brand/5"
-                    : "border-black/15 focus:ring-brand/20 focus:border-brand"
-                }`}
-                aria-invalid={!!errors.password}
-              />
-              <Lock className="w-4 h-4 text-steel absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-steel hover:text-ink p-0.5 rounded transition"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Password *</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  {...register("password")}
+                  placeholder="Minimum 8 characters"
+                  className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-slate-300 text-xs text-dark focus:border-primary-600 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-xs text-red-600 mt-1">{errors.password.message}</p>
+              )}
             </div>
-            {errors.password && <p className="text-xs text-brand font-medium mt-1">{errors.password.message}</p>}
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Confirm Password *
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  {...register("confirmPassword")}
+                  placeholder="Re-enter password"
+                  className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-slate-300 text-xs text-dark focus:border-primary-600 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-xs text-red-600 mt-1">{errors.confirmPassword.message}</p>
+              )}
+            </div>
           </div>
 
-          {/* Confirm Password */}
-          <div>
-            <label htmlFor="confirmPassword" className="text-xs font-semibold uppercase tracking-wider text-ink block">
-              Confirm Password <span className="text-brand">*</span>
-            </label>
-            <div className="relative mt-1">
-              <input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                autoComplete="new-password"
-                placeholder="Re-enter your password"
-                {...register("confirmPassword")}
-                className={`w-full border rounded-xl pl-9 pr-10 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${
-                  errors.confirmPassword
-                    ? "border-brand/50 focus:ring-brand/20 bg-brand/5"
-                    : "border-black/15 focus:ring-brand/20 focus:border-brand"
-                }`}
-                aria-invalid={!!errors.confirmPassword}
-              />
-              <Lock className="w-4 h-4 text-steel absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-steel hover:text-ink p-0.5 rounded transition"
-                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-              >
-                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <p className="text-xs text-brand font-medium mt-1">{errors.confirmPassword.message}</p>
-            )}
-          </div>
-
-          {/* Submit button */}
-          <button
+          <Button
             type="submit"
-            disabled={submitting}
-            className="w-full mt-2 bg-brand hover:bg-brand-dark active:scale-[0.99] disabled:opacity-60 text-white py-3 rounded-xl text-sm font-bold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+            variant="primary"
+            size="lg"
+            className="w-full mt-4"
+            isLoading={submitting}
           >
-            {submitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Creating account...</span>
-              </>
-            ) : (
-              <>
-                <span>Create Account & Continue</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
+            Create Customer Account
+          </Button>
         </form>
 
-        <p className="text-sm text-steel mt-6 text-center">
-          Already have an account?{" "}
-          <Link to="/login" className="text-brand font-bold hover:underline">
-            Log in directly
-          </Link>
-        </p>
+        <div className="pt-4 border-t border-slate-100 text-center">
+          <p className="text-xs text-slate-500">
+            Already registered?{" "}
+            <Link to="/login" className="text-primary-700 font-bold hover:underline">
+              Sign In to Account
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

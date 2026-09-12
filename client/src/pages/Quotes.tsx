@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Seo from "@/components/Seo";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Badge from "@/components/Badge";
+import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
 import { quoteService } from "@/services/quoteService";
 import { useCartStore } from "@/store/cartStore";
-import AccountNav from "@/components/AccountNav";
 import {
   FileSpreadsheet,
   Download,
@@ -18,6 +21,7 @@ import {
   AlertCircle,
   Eye,
   ShoppingCart,
+  Phone,
 } from "lucide-react";
 
 export default function Quotes() {
@@ -67,7 +71,11 @@ export default function Quotes() {
     }
 
     try {
-      const saved = JSON.parse(localStorage.getItem("ak_customer_quotes") || "[]");
+      const saved = JSON.parse(
+        localStorage.getItem("shubam_customer_quotes") ||
+          localStorage.getItem("ak_customer_quotes") ||
+          "[]"
+      );
       if (saved.length > 0) {
         setQuotes(
           saved.map((q: any) => ({
@@ -89,7 +97,35 @@ export default function Quotes() {
           }))
         );
       } else {
-        setQuotes([]);
+        // Sample default quote
+        setQuotes([
+          {
+            id: "demo-q1",
+            quoteNumber: "SFP-QUO-742910",
+            date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+            validUntil: new Date(Date.now() + 27 * 24 * 60 * 60 * 1000).toISOString(),
+            companyName: "Reliable Logistics Hub",
+            customerName: "Sanjay Deshmukh",
+            phone: "9820098200",
+            status: "APPROVED",
+            rawStatus: "approved",
+            pricing: { subtotal: 34500, gst: 6210, estimatedTotal: 40710 },
+            items: [
+              {
+                name: "SafePro 6kg ABC Stored Pressure Fire Extinguisher (IS 15683)",
+                quantity: 10,
+                unitPrice: 2850,
+                total: 28500,
+              },
+              {
+                name: "Single Landing Valve 63mm Oblique Type (IS 5290)",
+                quantity: 2,
+                unitPrice: 3000,
+                total: 6000,
+              },
+            ],
+          },
+        ]);
       }
     } catch {
       setQuotes([]);
@@ -140,73 +176,75 @@ export default function Quotes() {
   return (
     <>
       <Seo
-        title="My B2B Quotations & Proposals — AK Fire Safety Service"
+        title="My B2B Quotations & Proposals — Shubam Fire Protection"
         description="Review, download, and manage your commercial fire safety proposals and quotations."
       />
 
-      <div className="bg-paper border-b border-black/10 py-6">
-        <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-brand font-mono">
-              Enterprise Accounts
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-ink mt-0.5">
-              B2B Quotations & Proposals
-            </h1>
-            <p className="text-xs sm:text-sm text-steel mt-0.5">
-              Review and approve formal proposals generated for your business or housing society.
-            </p>
+      <div className="bg-slate-900 text-white py-8 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumb
+            items={[
+              { label: "Account Portal", href: "/profile" },
+              { label: "B2B Quotations" },
+            ]}
+            className="mb-4 text-slate-400 [&_a]:text-slate-400 hover:[&_a]:text-white"
+          />
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-primary-400 font-mono">
+                Enterprise Accounts
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-white mt-1">
+                B2B Quotations & Proposals
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                Review and approve formal GST proposals generated for your business or housing society.
+              </p>
+            </div>
+
+            <Button asChild variant="primary" size="md">
+              <Link to="/request-quote">
+                <FileSpreadsheet className="w-4 h-4 mr-1.5" /> Request New Quotation (RFQ)
+              </Link>
+            </Button>
           </div>
-          <Link
-            to="/request-quote"
-            className="px-4 py-2.5 bg-brand hover:bg-brand-dark text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-amber" /> Request New Quotation (RFQ)
-          </Link>
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          <AccountNav />
-
-          <div className="flex-1 min-w-0 w-full space-y-6">
-            {/* Status Filter Tabs */}
-            <div className="flex flex-wrap gap-2">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+        {/* Status Filter Tabs */}
+        <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
           {["All", "Submitted", "Approved", "Converted"].map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 statusFilter === st
-                  ? "bg-brand text-white shadow-sm"
-                  : "bg-white text-ink hover:bg-paper border border-black/10"
+                  ? "bg-primary-600 text-white shadow-sm"
+                  : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
               }`}
             >
-              {st} {st !== "All" && `(${quotes.filter((q) => q.status.includes(st.toUpperCase())).length})`}
+              {st}{" "}
+              {st !== "All" &&
+                `(${quotes.filter((q) => q.status.includes(st.toUpperCase())).length})`}
             </button>
           ))}
         </div>
 
         {isLoading ? (
-          <div className="py-20 text-center space-y-2">
-            <Loader2 className="w-8 h-8 animate-spin text-brand mx-auto" />
-            <p className="text-xs text-steel">Retrieving commercial proposals...</p>
+          <div className="py-20 text-center space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary-600 mx-auto" />
+            <p className="text-xs text-slate-500">Retrieving commercial proposals...</p>
           </div>
         ) : filteredQuotes.length === 0 ? (
-          <div className="p-16 bg-white border border-black/10 rounded-xl text-center max-w-md mx-auto">
-            <FileSpreadsheet className="w-12 h-12 text-steel/40 mx-auto mb-3" />
-            <h2 className="font-display font-semibold text-lg text-ink">No Active Quotations</h2>
-            <p className="text-steel text-xs sm:text-sm mt-1">
-              Need bulk fire extinguishers, hydrant systems, or AMC packages?
-            </p>
-            <Link
-              to="/request-quote"
-              className="mt-5 inline-flex items-center gap-1.5 px-4 py-2 bg-brand text-white text-xs font-semibold rounded-lg hover:bg-brand-dark transition-colors"
-            >
-              Generate B2B Quotation <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+          <EmptyState
+            icon={FileSpreadsheet}
+            title="No active quotations found"
+            description="Need bulk fire extinguishers, hydrant equipment, or AMC packages? Request a customized proposal."
+            actionText="Generate B2B RFQ"
+            actionLink="/request-quote"
+          />
         ) : (
           <div className="space-y-6">
             {filteredQuotes.map((q, idx) => {
@@ -216,215 +254,136 @@ export default function Quotes() {
               return (
                 <div
                   key={idx}
-                  className={`bg-white border rounded-2xl p-6 shadow-sm space-y-4 transition-all ${
-                    isHighlighted ? "border-brand ring-2 ring-brand/20" : "border-black/10"
+                  className={`bg-white border rounded-3xl p-6 sm:p-8 shadow-sm space-y-5 transition-all ${
+                    isHighlighted
+                      ? "border-primary-600 ring-2 ring-primary-100"
+                      : "border-slate-200/80 hover:border-slate-300"
                   }`}
                 >
-                  <div className="flex flex-wrap items-start justify-between pb-4 border-b border-black/10 gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between pb-4 border-b border-slate-100 gap-3">
                     <div>
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-mono text-base font-bold text-brand">{q.quoteNumber}</span>
-                        <span
-                          className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="font-mono text-base font-extrabold text-primary-700">
+                          {q.quoteNumber}
+                        </span>
+                        <Badge
+                          tone={
                             isApproved
-                              ? "bg-green-100 text-green-800"
+                              ? "success"
                               : q.status.includes("CONVERTED")
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-amber-100 text-amber-900"
-                          }`}
+                              ? "neutral"
+                              : "warning"
+                          }
                         >
                           {q.status}
-                        </span>
+                        </Badge>
                       </div>
-                      <p className="text-xs font-bold text-ink mt-1.5">
-                        Client: {q.companyName} {q.customerName && `(${q.customerName})`}
+                      <p className="text-sm font-bold text-slate-900 mt-1">
+                        {q.companyName}{" "}
+                        {q.customerName && (
+                          <span className="text-slate-500 font-normal">
+                            (Attn: {q.customerName})
+                          </span>
+                        )}
                       </p>
                     </div>
 
-                    <div className="text-right text-xs text-steel">
-                      <p>
-                        Issued:{" "}
-                        {new Date(q.date).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </p>
-                      <p className="text-red-700 font-semibold mt-0.5">
-                        Valid Until:{" "}
-                        {new Date(q.validUntil).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </p>
+                    <div className="text-right text-xs text-slate-500">
+                      <span>Generated: {new Date(q.date).toLocaleDateString("en-IN")}</span>
+                      <span className="block mt-0.5 text-primary-700 font-medium">
+                        Valid Until: {new Date(q.validUntil).toLocaleDateString("en-IN")}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Items breakdown table */}
+                  {/* Line Items Table */}
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-paper text-steel border-b border-black/10">
+                    <table className="w-full text-left text-xs sm:text-sm">
+                      <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                         <tr>
-                          <th className="py-2.5 px-3">Equipment Item</th>
-                          <th className="py-2.5 px-3 text-center">Quantity</th>
-                          <th className="py-2.5 px-3 text-right">Unit Price</th>
-                          <th className="py-2.5 px-3 text-right">Total (Excl. Tax)</th>
+                          <th className="py-2.5 px-4">Item & Specifications</th>
+                          <th className="py-2.5 px-4 text-center">Qty</th>
+                          <th className="py-2.5 px-4 text-right">Unit Price</th>
+                          <th className="py-2.5 px-4 text-right">Total</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-black/5">
-                        {q.items?.map((item: any, i: number) => {
-                          const itemTotal = (item.unitPrice || 0) * (item.quantity || 1);
-                          return (
-                            <tr key={i}>
-                              <td className="py-2.5 px-3 font-semibold text-ink">
-                                {item.name}
-                                {item.SKU && <span className="font-mono text-[10px] text-steel block">{item.SKU}</span>}
-                              </td>
-                              <td className="py-2.5 px-3 text-center">{item.quantity}</td>
-                              <td className="py-2.5 px-3 text-right">
-                                ₹{(item.unitPrice || 0).toLocaleString("en-IN")}
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-bold text-ink">
-                                ₹{itemTotal.toLocaleString("en-IN")}
-                              </td>
-                            </tr>
-                          );
-                        })}
+                      <tbody className="divide-y divide-slate-100">
+                        {q.items?.map((item: any, i: number) => (
+                          <tr key={i}>
+                            <td className="py-3 px-4 font-medium text-slate-800">
+                              {item.name}
+                            </td>
+                            <td className="py-3 px-4 text-center text-slate-600">
+                              {item.quantity}
+                            </td>
+                            <td className="py-3 px-4 text-right font-mono text-slate-600">
+                              ₹{(item.unitPrice || 0).toLocaleString("en-IN")}
+                            </td>
+                            <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">
+                              ₹{((item.total || item.unitPrice * item.quantity) || 0).toLocaleString("en-IN")}
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
 
-                  {/* Pricing footer and CTAs */}
-                  <div className="pt-4 border-t border-black/10 flex flex-wrap items-center justify-between gap-4">
-                    <div className="text-xs text-steel">
-                      <span>Includes 18% GST (CGST 9% + SGST 9%) for Form B and tax input credit eligibility.</span>
+                  {/* Financial Summary */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-4 pt-3 border-t border-slate-100">
+                    <div className="text-xs text-slate-500 space-y-1">
+                      <p>• Prices include standard 12-month manufacturer warranty.</p>
+                      <p>• Quotation valid for 30 days from issuance.</p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="text-right pr-2">
-                        <span className="text-[10px] text-steel block uppercase tracking-wider">Total Value</span>
-                        <span className="text-xl font-bold text-ink font-display">
-                          ₹{(q.pricing?.estimatedTotal || 0).toLocaleString("en-IN")}
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 w-full sm:w-auto sm:min-w-[240px] space-y-1.5 text-xs text-slate-600">
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span className="font-mono font-semibold text-slate-900">
+                          ₹{q.pricing.subtotal.toLocaleString("en-IN")}
                         </span>
                       </div>
-
-                      <button
-                        onClick={() => setSelectedQuote(q)}
-                        className="px-3.5 py-2 border border-black/15 hover:bg-paper text-ink rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
-                      >
-                        <Eye className="w-3.5 h-3.5" /> Details
-                      </button>
-
-                      <button
-                        onClick={() => handleDownloadQuote(q)}
-                        disabled={downloadingId === (q.id || q.quoteNumber)}
-                        className="px-4 py-2 bg-ink hover:bg-black text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
-                      >
-                        {downloadingId === (q.id || q.quoteNumber) ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Download className="w-3.5 h-3.5 text-amber" />
-                        )}
-                        Download PDF
-                      </button>
-
-                      {isApproved && (
-                        <button
-                          onClick={() => handleAcceptQuoteAndCheckout(q)}
-                          className="px-4 py-2 bg-brand hover:bg-brand-dark text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
-                        >
-                          <ShoppingCart className="w-3.5 h-3.5" /> Accept & Checkout
-                        </button>
-                      )}
+                      <div className="flex justify-between">
+                        <span>18% GST (CGST + SGST):</span>
+                        <span className="font-mono font-semibold text-slate-900">
+                          ₹{q.pricing.gst.toLocaleString("en-IN")}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm font-bold text-slate-900 pt-2 border-t border-slate-200">
+                        <span>Grand Total:</span>
+                        <span className="font-mono text-primary-700">
+                          ₹{q.pricing.estimatedTotal.toLocaleString("en-IN")}
+                        </span>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleDownloadQuote(q)}
+                      isLoading={downloadingId === (q.id || q.quoteNumber)}
+                    >
+                      <Download className="w-4 h-4 mr-1.5" /> Download PDF Quote
+                    </Button>
+
+                    {isApproved && (
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => handleAcceptQuoteAndCheckout(q)}
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-1.5" /> Accept Quote & Order
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
         )}
-          </div>
-        </div>
       </main>
-
-      {/* Quote Details Modal */}
-      {selectedQuote && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-black/10 pb-3">
-              <div>
-                <span className="font-mono text-sm font-bold text-brand">{selectedQuote.quoteNumber}</span>
-                <h3 className="font-display font-bold text-base text-ink">Quotation Specifications</h3>
-              </div>
-              <button onClick={() => setSelectedQuote(null)} className="text-steel hover:text-ink">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="bg-paper p-3.5 rounded-xl space-y-1.5">
-                <p><strong>Company:</strong> {selectedQuote.companyName}</p>
-                <p><strong>Contact Person:</strong> {selectedQuote.customerName} ({selectedQuote.phone})</p>
-                {selectedQuote.email && <p><strong>Email:</strong> {selectedQuote.email}</p>}
-                {selectedQuote.address && <p><strong>Site Address:</strong> {selectedQuote.address}</p>}
-                {selectedQuote.requirements && (
-                  <p><strong>Special Requirements:</strong> {selectedQuote.requirements}</p>
-                )}
-              </div>
-
-              <div className="border border-black/10 rounded-xl p-3 space-y-2">
-                <h4 className="font-bold text-ink">Line Items Breakdown:</h4>
-                <div className="space-y-1.5 divide-y divide-black/5">
-                  {selectedQuote.items?.map((item: any, i: number) => (
-                    <div key={i} className="pt-1.5 first:pt-0 flex justify-between">
-                      <div>
-                        <p className="font-semibold text-ink">{item.name}</p>
-                        <span className="text-steel text-[11px]">Qty: {item.quantity}</span>
-                      </div>
-                      <span className="font-bold text-ink">
-                        ₹{((item.unitPrice || 0) * (item.quantity || 1)).toLocaleString("en-IN")}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-paper p-3.5 rounded-xl space-y-1 text-right">
-                <div className="flex justify-between text-steel">
-                  <span>Subtotal:</span>
-                  <span>₹{selectedQuote.pricing.subtotal.toLocaleString("en-IN")}</span>
-                </div>
-                <div className="flex justify-between text-steel">
-                  <span>GST (18%):</span>
-                  <span>₹{selectedQuote.pricing.gst.toLocaleString("en-IN")}</span>
-                </div>
-                <div className="flex justify-between font-bold text-ink text-sm pt-1 border-t border-black/10">
-                  <span>Grand Total:</span>
-                  <span className="text-brand font-display">
-                    ₹{selectedQuote.pricing.estimatedTotal.toLocaleString("en-IN")}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-black/10">
-              <button
-                onClick={() => setSelectedQuote(null)}
-                className="px-4 py-2 border border-black/15 text-ink rounded-lg text-xs font-semibold hover:bg-paper"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => handleDownloadQuote(selectedQuote)}
-                className="px-4 py-2 bg-brand hover:bg-brand-dark text-white rounded-lg text-xs font-bold flex items-center gap-1.5"
-              >
-                <Download className="w-3.5 h-3.5" /> Download Proposal PDF
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

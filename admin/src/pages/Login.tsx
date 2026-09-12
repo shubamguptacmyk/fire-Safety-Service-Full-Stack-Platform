@@ -24,7 +24,7 @@ export default function Login() {
     setServerError(null);
     setSubmitting(true);
     try {
-      const result = await authService.login(values.identifier, values.password);
+      const result = await authService.login(values.identifier.trim(), values.password);
       if (result.user.role === "customer") {
         setServerError("This account does not have staff access.");
         return;
@@ -32,7 +32,7 @@ export default function Login() {
       setSession(result.user, result.accessToken, result.refreshToken);
       navigate("/", { replace: true });
     } catch (err: any) {
-      setServerError(err?.response?.data?.message || "Login failed. Please check your credentials.");
+      setServerError(err?.response?.data?.message || err?.message || "Login failed. Please check your credentials.");
     } finally {
       setSubmitting(false);
     }

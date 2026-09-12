@@ -3,6 +3,11 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { blogService, BlogPostItem } from "@/services/blogService";
 import Seo from "@/components/Seo";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Badge from "@/components/Badge";
+import Button from "@/components/ui/Button";
+import TrustBadge from "@/components/ui/TrustBadge";
+import Pagination from "@/components/ui/Pagination";
 import {
   ArrowRight,
   Calendar,
@@ -62,7 +67,7 @@ export const FALLBACK_ARTICLES: Article[] = [
       "Why discharging or aging extinguishers require pressure proof testing to 35 bar, and how to spot adulterated chemical powders.",
     image:
       "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80",
-    author: "Tech. Team AK Fire",
+    author: "Technical Team — Shubam Fire",
   },
   {
     slug: "fire-safety-for-commercial-offices-factories",
@@ -100,44 +105,41 @@ export default function Blog() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["public-blogs", selectedCategory, debouncedSearch, page],
+  const { data: blogData, isLoading } = useQuery({
+    queryKey: ["published-blogs", selectedCategory, debouncedSearch, page],
     queryFn: () =>
       blogService.getPublishedPosts({
         category: selectedCategory === "All" ? undefined : selectedCategory,
         search: debouncedSearch || undefined,
         page,
-        limit: 9,
+        limit: 6,
       }),
   });
 
-  const apiArticles = data?.items || [];
-  const totalPages = data?.totalPages || 1;
+  const apiPosts = blogData?.items || [];
+  const totalPages = blogData?.totalPages || 1;
 
-  // Transform articles to uniform structure
+  // Adapt items
   const articles: Article[] =
-    apiArticles.length > 0
-      ? apiArticles.map((item) => ({
-          slug: item.slug,
-          title: item.title,
-          category: item.category,
-          date: item.publishedAt
-            ? new Date(item.publishedAt).toLocaleDateString("en-IN", {
+    apiPosts.length > 0
+      ? apiPosts.map((p) => ({
+          slug: p.slug,
+          title: p.title,
+          category: p.category,
+          date: p.publishedAt
+            ? new Date(p.publishedAt).toLocaleDateString("en-IN", {
                 day: "numeric",
                 month: "short",
                 year: "numeric",
               })
-            : "Recently Published",
-          readTime: `${item.readTime || 5} min read`,
-          summary: item.excerpt,
-          image:
-            item.featuredImage ||
-            "https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&w=800&q=80",
-          author: item.author?.name || "AK Fire Safety Team",
+            : "Recent",
+          readTime: `${p.readTime || 5} min read`,
+          summary: p.excerpt,
+          image: p.featuredImage,
+          author: p.author?.name || "Shubam Fire Technical Team",
         }))
       : FALLBACK_ARTICLES.filter((a) => {
-          const matchCat =
-            selectedCategory === "All" || a.category === selectedCategory;
+          const matchCat = selectedCategory === "All" || a.category === selectedCategory;
           const matchSearch =
             !debouncedSearch ||
             a.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
@@ -145,244 +147,197 @@ export default function Blog() {
           return matchCat && matchSearch;
         });
 
-  const featuredArticle = articles[0];
+  const featured = articles[0];
   const regularArticles = articles.slice(1);
 
   return (
     <>
       <Seo
-        title="Fire Safety Blog & Compliance Knowledge Base — AK Fire Safety"
-        description="Authoritative guides on fire extinguisher selection, hydrostatic testing norms, and Maharashtra Form B compliance guidelines."
+        title="Fire Safety Blog & Engineering Knowledge Base — Shubam Fire Protection"
+        description="Expert guides on fire extinguishers, NBC Part IV codes, Maharashtra Form B compliance, and industrial fire prevention standards."
       />
 
       {/* Hero Header */}
-      <div className="bg-ink text-white py-12 border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-amber font-semibold">
-            <BookOpen className="w-4 h-4" /> Technical Resources & Compliance Guides
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-display font-bold mt-1">
-            Fire Safety Guides & Compliance Insights
-          </h1>
-          <p className="text-white/70 text-sm mt-2 max-w-2xl leading-relaxed">
-            Written by licensed fire safety engineers, ISO auditors, and certified equipment
-            inspectors in Navi Mumbai to keep your building code-compliant and secure.
-          </p>
+      <section className="bg-slate-900 text-white py-12 lg:py-16 border-b border-slate-800 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 opacity-90" />
+        <div className="absolute right-0 top-0 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Search Box */}
-          <div className="mt-6 max-w-md relative">
-            <Search className="w-4 h-4 text-white/50 absolute left-3.5 top-3" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumb
+            items={[{ label: "Knowledge Base & Blog" }]}
+            className="mb-6 text-slate-400 [&_a]:text-slate-400 hover:[&_a]:text-white"
+          />
+
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary-950 text-primary-300 border border-primary-800 mb-3">
+              <BookOpen className="w-3.5 h-3.5" /> Fire Engineering & Regulatory Insights
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-white">
+              Fire Safety Knowledge Base & Technical Guides
+            </h1>
+            <p className="text-slate-300 text-base sm:text-lg mt-4 leading-relaxed">
+              Practical advice, regulatory checklists, and engineering insights curated by licensed fire safety officers and technicians.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <TrustBadge />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
+        {/* Search & Categories */}
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
+              placeholder="Search guides (e.g. Form B, Hydro test, Refilling, Evacuation)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search guides, Form B, extinguisher types, NBC codes..."
-              className="w-full bg-white/10 border border-white/20 focus:border-amber rounded-lg pl-10 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder:text-white/50 outline-none"
+              className="w-full pl-12 pr-4 py-3.5 text-sm bg-white border border-slate-200 rounded-2xl focus:border-primary-600 outline-none shadow-sm"
             />
           </div>
-        </div>
-      </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-10 space-y-10">
-        {/* Filter Pills */}
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => {
-                setSelectedCategory(cat);
-                setPage(1);
-              }}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                selectedCategory === cat
-                  ? "bg-brand text-white shadow-sm"
-                  : "bg-paper text-ink hover:bg-gray-200 border border-black/10"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  setPage(1);
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  selectedCategory === cat
+                    ? "bg-primary-600 text-white shadow-md"
+                    : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {isLoading ? (
-          <div className="py-20 text-center space-y-3">
-            <Loader2 className="w-8 h-8 animate-spin text-brand mx-auto" />
-            <p className="text-xs text-steel">Loading fire safety knowledge articles...</p>
-          </div>
-        ) : articles.length === 0 ? (
-          <div className="p-16 bg-white border border-black/10 rounded-xl text-center max-w-md mx-auto">
-            <BookOpen className="w-12 h-12 text-steel/40 mx-auto mb-3" />
-            <h3 className="font-display font-bold text-base text-ink">No Articles Found</h3>
-            <p className="text-xs text-steel mt-1">
-              No fire safety resources matched your search &ldquo;{debouncedSearch}&rdquo;.
-            </p>
-            <button
-              onClick={() => {
-                setSearchTerm("");
-                setSelectedCategory("All");
-              }}
-              className="mt-4 px-4 py-2 bg-brand text-white text-xs font-semibold rounded hover:bg-brand-dark"
-            >
-              Reset Filters
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Featured Article Banner */}
-            {featuredArticle && !debouncedSearch && page === 1 && (
-              <div className="bg-white border border-black/10 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all grid lg:grid-cols-2 group">
-                <div className="aspect-[16/10] lg:aspect-auto bg-paper overflow-hidden relative">
-                  <img
-                    src={featuredArticle.image}
-                    alt={featuredArticle.title}
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500' viewBox='0 0 24 24' fill='%23f5f5f5' stroke='%23C13B26' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><rect width='24' height='24' fill='%23faf8f5'/><path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z'/></svg>";
-                    }}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 left-4 bg-brand text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                    <Sparkles className="w-3 h-3 text-amber" /> Featured Guide
-                  </div>
-                </div>
-
-                <div className="p-6 sm:p-8 flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-xs text-steel">
-                      <span className="font-bold text-brand uppercase">{featuredArticle.category}</span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" /> {featuredArticle.date}
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" /> {featuredArticle.readTime}
-                      </span>
-                    </div>
-
-                    <Link to={`/blog/${featuredArticle.slug}`} className="block">
-                      <h2 className="font-display font-bold text-2xl text-ink group-hover:text-brand transition-colors leading-snug">
-                        {featuredArticle.title}
-                      </h2>
-                    </Link>
-
-                    <p className="text-xs sm:text-sm text-steel leading-relaxed">
-                      {featuredArticle.summary}
-                    </p>
-                  </div>
-
-                  <div className="mt-6 pt-4 border-t border-black/10 flex items-center justify-between">
-                    <span className="text-xs text-ink/80 font-semibold flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-brand" /> {featuredArticle.author}
-                    </span>
-                    <Link
-                      to={`/blog/${featuredArticle.slug}`}
-                      className="text-xs font-bold text-brand hover:text-brand-dark inline-flex items-center gap-1.5"
-                    >
-                      Read Full Guide <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Grid of Other Articles */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(debouncedSearch || page > 1 ? articles : regularArticles).map((art) => (
-                <article
-                  key={art.slug}
-                  className="bg-white border border-black/10 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
-                >
-                  <div className="aspect-[16/9] bg-paper overflow-hidden relative">
-                    <img
-                      src={art.image}
-                      alt={art.title}
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='350' viewBox='0 0 24 24' fill='%23f5f5f5' stroke='%23C13B26' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><rect width='24' height='24' fill='%23faf8f5'/><path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z'/></svg>";
-                      }}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <span className="absolute top-3 left-3 bg-ink/80 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-sm uppercase tracking-wider">
-                      {art.category}
-                    </span>
-                  </div>
-
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center gap-2.5 text-[11px] text-steel mb-2">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" /> {art.date}
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> {art.readTime}
-                        </span>
-                      </div>
-
-                      <Link to={`/blog/${art.slug}`} className="block">
-                        <h3 className="font-display font-bold text-base text-ink group-hover:text-brand transition-colors leading-snug">
-                          {art.title}
-                        </h3>
-                      </Link>
-
-                      <p className="text-xs text-steel mt-2 leading-relaxed line-clamp-3">
-                        {art.summary}
-                      </p>
-                    </div>
-
-                    <div className="mt-5 pt-3 border-t border-black/10 flex items-center justify-between">
-                      <span className="text-[11px] text-steel truncate max-w-[150px]">
-                        By {art.author}
-                      </span>
-                      <Link
-                        to={`/blog/${art.slug}`}
-                        className="text-xs font-bold text-brand hover:text-brand-dark inline-flex items-center gap-1"
-                      >
-                        Read More <ArrowRight className="w-3 h-3" />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              ))}
+        {/* Featured Article Card */}
+        {featured && page === 1 && !debouncedSearch && (
+          <div className="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all grid lg:grid-cols-2 gap-0 group">
+            <div className="relative aspect-16/9 lg:aspect-auto overflow-hidden bg-slate-100">
+              <img
+                src={featured.image}
+                alt={featured.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <span className="absolute top-4 left-4 px-3 py-1 bg-primary-600 text-white text-[11px] font-bold rounded-full uppercase tracking-wider shadow-md">
+                Featured Guide
+              </span>
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-10 flex items-center justify-center gap-2">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                  className="p-2 border border-black/10 rounded bg-white text-ink text-xs disabled:opacity-40 hover:bg-paper"
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setPage(i + 1)}
-                    className={`w-8 h-8 rounded text-xs font-semibold ${
-                      i + 1 === page
-                        ? "bg-brand text-white"
-                        : "bg-white border border-black/10 text-ink hover:bg-paper"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page >= totalPages}
-                  className="p-2 border border-black/10 rounded bg-white text-ink text-xs disabled:opacity-40 hover:bg-paper"
-                  aria-label="Next page"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+            <div className="p-8 sm:p-10 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-3 text-xs text-slate-400 mb-3">
+                  <span className="font-bold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-md">
+                    {featured.category}
+                  </span>
+                  <span>•</span>
+                  <span>{featured.readTime}</span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl font-bold font-display text-slate-900 group-hover:text-primary-700 transition-colors leading-tight">
+                  <Link to={`/blog/${featured.slug}`}>{featured.title}</Link>
+                </h2>
+
+                <p className="text-sm text-slate-600 mt-3.5 leading-relaxed">
+                  {featured.summary}
+                </p>
               </div>
-            )}
-          </>
+
+              <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-xs text-slate-500">By {featured.author}</span>
+                <Link
+                  to={`/blog/${featured.slug}`}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 hover:text-primary-700"
+                >
+                  Read Full Article <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Regular Articles Grid */}
+        {isLoading ? (
+          <div className="py-20 text-center space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary-600 mx-auto" />
+            <p className="text-xs text-slate-500">Loading safety articles...</p>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {(page === 1 && !debouncedSearch ? regularArticles : articles).map((article, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl hover:border-primary-200 transition-all duration-300 flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
+                    <img
+                      src={article.image}
+                      alt={article.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <span className="absolute top-3 left-3 px-2.5 py-0.5 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-bold rounded-full uppercase tracking-wider">
+                      {article.category}
+                    </span>
+                  </div>
+
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 text-slate-400 text-xs mb-2">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" /> {article.date}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" /> {article.readTime}
+                      </span>
+                    </div>
+
+                    <h3 className="font-bold text-base sm:text-lg text-slate-900 font-display group-hover:text-primary-700 transition-colors leading-snug">
+                      <Link to={`/blog/${article.slug}`}>{article.title}</Link>
+                    </h3>
+
+                    <p className="text-xs sm:text-sm text-slate-600 mt-2.5 leading-relaxed line-clamp-2">
+                      {article.summary}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-6 pt-0">
+                  <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <span className="text-[11px] text-slate-400 truncate max-w-[150px]">
+                      {article.author}
+                    </span>
+                    <Link
+                      to={`/blog/${article.slug}`}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-primary-600 hover:text-primary-700"
+                    >
+                      Read Guide <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="pt-8">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(newPage) => setPage(newPage)}
+            />
+          </div>
         )}
       </main>
     </>

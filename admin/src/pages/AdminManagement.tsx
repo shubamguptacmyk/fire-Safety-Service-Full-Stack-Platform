@@ -689,30 +689,34 @@ export default function AdminManagement() {
                                 <KeyRound className="w-3.5 h-3.5" />
                               </button>
 
-                              {/* Reset Temporary Password */}
-                              <button
-                                onClick={() => setResetModalUser(admin)}
-                                className="p-1.5 text-steel hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
-                                title="Generate temporary password"
-                              >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                              </button>
+                              {/* Reset Temporary Password (staff only, not super_admin) */}
+                              {admin.role !== "super_admin" && (
+                                <button
+                                  onClick={() => setResetModalUser(admin)}
+                                  className="p-1.5 text-steel hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
+                                  title="Generate temporary password"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                </button>
+                              )}
 
-                              {/* Activate / Deactivate Toggle */}
-                              <button
-                                onClick={() => setToggleStatusUser(admin)}
-                                className={`p-1.5 rounded-lg transition-colors ${
-                                  isActive
-                                    ? "text-steel hover:text-red-700 hover:bg-red-50"
-                                    : "text-steel hover:text-green-700 hover:bg-green-50"
-                                }`}
-                                title={isActive ? "Deactivate account" : "Activate account"}
-                              >
-                                {isActive ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
-                              </button>
+                              {/* Activate / Deactivate Toggle (prevent deactivating super_admin) */}
+                              {admin.role !== "super_admin" && (
+                                <button
+                                  onClick={() => setToggleStatusUser(admin)}
+                                  className={`p-1.5 rounded-lg transition-colors ${
+                                    isActive
+                                      ? "text-steel hover:text-red-700 hover:bg-red-50"
+                                      : "text-steel hover:text-green-700 hover:bg-green-50"
+                                  }`}
+                                  title={isActive ? "Deactivate account" : "Activate account"}
+                                >
+                                  {isActive ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+                                </button>
+                              )}
 
-                              {/* Delete Account (not allowed on self) */}
-                              {!isCurrentLoggedUser && (
+                              {/* Delete Account (not allowed on self or super_admin) */}
+                              {!isCurrentLoggedUser && admin.role !== "super_admin" && (
                                 <button
                                   onClick={() => setDeleteUser(admin)}
                                   className="p-1.5 text-steel hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"

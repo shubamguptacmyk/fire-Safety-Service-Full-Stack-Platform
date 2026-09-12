@@ -6,6 +6,9 @@ import { useAuthStore } from "@/store/authStore";
 import { productService } from "@/services/productService";
 import { orderService } from "@/services/orderService";
 import Seo from "@/components/Seo";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import {
   ShieldCheck,
   Truck,
@@ -14,8 +17,9 @@ import {
   Lock,
   ArrowRight,
   CheckCircle2,
-  Banknote,
   AlertCircle,
+  MapPin,
+  FileCheck,
 } from "lucide-react";
 
 export default function Checkout() {
@@ -39,14 +43,13 @@ export default function Checkout() {
   const [city, setCity] = useState("Navi Mumbai");
   const [state, setState] = useState("Maharashtra");
   const [pincode, setPincode] = useState("410206");
-  const [sameBilling, setSameBilling] = useState(true);
 
   // Options
   const [deliveryMethod, setDeliveryMethod] = useState<"standard" | "express" | "pickup">("standard");
   const [paymentMethod, setPaymentMethod] = useState<"mock" | "cod" | "razorpay">("mock");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Fetch cart products
   const { data: allProducts = [] } = useQuery({
@@ -71,14 +74,21 @@ export default function Checkout() {
   }, 0);
 
   const gst = Math.round(subtotal * 0.18);
-  const shippingFee = deliveryMethod === "pickup" ? 0 : deliveryMethod === "express" ? 450 : subtotal > 5000 ? 0 : 250;
+  const shippingFee =
+    deliveryMethod === "pickup"
+      ? 0
+      : deliveryMethod === "express"
+      ? 450
+      : subtotal > 5000
+      ? 0
+      : 250;
   const grandTotal = subtotal + gst + shippingFee;
 
   async function handlePlaceOrder(e: React.FormEvent) {
     e.preventDefault();
-    setCheckoutError(null);
+    setErrorMessage(null);
     if (!name || !phone || !line1 || !pincode) {
-      setCheckoutError("Please fill out all mandatory contact and shipping address fields.");
+      setErrorMessage("Please complete all required fields (Name, Phone, Address Line, Pincode).");
       return;
     }
 
@@ -99,10 +109,13 @@ export default function Checkout() {
         paymentMethod,
       });
 
-      // Keep backup in localStorage for instant receipt view
+      // Keep backup in localStorage
       try {
-        const existing = JSON.parse(localStorage.getItem("ak_customer_orders") || "[]");
+        const existing =
+          JSON.parse(localStorage.getItem("shubam_customer_orders") || "null") ||
+          JSON.parse(localStorage.getItem("ak_customer_orders") || "[]");
         existing.unshift(res.order);
+        localStorage.setItem("shubam_customer_orders", JSON.stringify(existing));
         localStorage.setItem("ak_customer_orders", JSON.stringify(existing));
       } catch {
         /* ignore */
@@ -111,7 +124,10 @@ export default function Checkout() {
       clear();
       navigate(`/order-success?orderNumber=${res.order.orderNumber}`);
     } catch (err: any) {
-      setCheckoutError(err.response?.data?.message || err.message || "Failed to place order. Please verify your details.");
+      setErrorMessage(
+        err.response?.data?.message ||
+          "Failed to process your order. Please verify your connection or try another payment method."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -120,397 +136,326 @@ export default function Checkout() {
   return (
     <>
       <Seo
-        title="Secure Checkout — AK Fire Safety Service"
-        description="Complete your order for fire safety equipment. Free shipping above ₹5000 in Mumbai & MMR."
+        title="Secure Commercial Checkout — Shubam Fire Protection"
+        description="Complete your order for fire safety equipment. Safe shipping and official GST tax invoices issued across Maharashtra."
       />
 
-      <div className="bg-paper border-b border-black/10 py-5">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
-          <h1 className="text-2xl font-display font-bold text-ink">Checkout & Delivery</h1>
-          <div className="flex items-center gap-1.5 text-xs text-steel">
-            <Lock className="w-3.5 h-3.5 text-green-700" />
-            <span>256-bit Encrypted Checkout</span>
+      <div className="bg-slate-50 border-b border-slate-200/80 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <Breadcrumb
+            items={[
+              { label: "Cart", href: "/cart" },
+              { label: "Secure Checkout" },
+            ]}
+          />
+        </div>
+      </div>
+
+      <div className="bg-white border-b border-slate-200 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-dark">
+              Checkout &amp; Delivery Details
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Provide installation address and billing particulars for official GST invoice generation
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+            <Lock className="w-3.5 h-3.5 text-emerald-600" />
+            <span>256-Bit Encrypted Order Processing</span>
           </div>
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <form onSubmit={handlePlaceOrder} className="grid lg:grid-cols-3 gap-8">
-          {/* Left 2 Cols: Form */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* 1. Customer Contact */}
-            <div className="bg-white border border-black/10 rounded-xl p-6 shadow-sm space-y-4">
-              <h2 className="font-bold text-base text-ink flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-brand text-white text-xs flex items-center justify-center font-display">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        <form onSubmit={handlePlaceOrder} className="grid lg:grid-cols-12 gap-8 items-start">
+          {/* Left Columns: Forms */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* 1. Contact Particulars */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-5">
+              <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
+                <span className="w-6 h-6 rounded-full bg-primary-700 text-white text-xs font-bold flex items-center justify-center">
                   1
                 </span>
-                Contact Information
-              </h2>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Full Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Rahul Sharma"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Phone Number (For Delivery OTP) *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="e.g. 9876543210"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
+                <h2 className="font-bold text-base font-display text-dark">Contact Information</h2>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">Email Address (For Tax Invoice & Tracking)</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
-                  className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Input
+                  label="Full Name"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Rajesh Sharma"
+                />
+                <Input
+                  label="Phone Number"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g. 9820012345"
                 />
               </div>
 
-              {/* B2B GST Toggle */}
-              <div className="pt-2 border-t border-black/5">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-ink">
+              <Input
+                label="Official Email Address"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@company.com"
+                helperText="Order confirmations and GST e-invoices are delivered to this address."
+              />
+
+              {/* B2B Toggle */}
+              <div className="pt-2 border-t border-slate-100">
+                <label className="flex items-center gap-2.5 text-xs font-bold text-dark cursor-pointer">
                   <input
                     type="checkbox"
                     checked={isB2B}
                     onChange={(e) => setIsB2B(e.target.checked)}
-                    className="rounded text-brand focus:ring-brand"
+                    className="rounded border-slate-300 text-primary-700 focus:ring-primary-600 w-4 h-4"
                   />
-                  <span>Ordering for a Business / Society (Add GSTIN for Tax Credit)</span>
+                  <span>This is an official Company / Corporate Purchase (GST Input Tax Credit)</span>
                 </label>
 
                 {isB2B && (
-                  <div className="grid sm:grid-cols-2 gap-4 mt-3 p-3.5 bg-paper rounded border border-black/10">
-                    <div>
-                      <label className="block text-xs font-semibold text-ink/80 mb-1">Company / Society Name</label>
-                      <input
-                        type="text"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="e.g. Apex Tech Park Ltd"
-                        className="w-full px-3 py-1.5 border border-black/20 rounded text-xs focus:border-brand outline-none bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-ink/80 mb-1">GSTIN Number</label>
-                      <input
-                        type="text"
-                        value={gstNumber}
-                        onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
-                        placeholder="27AAAAA0000A1Z5"
-                        className="w-full px-3 py-1.5 border border-black/20 rounded text-xs uppercase focus:border-brand outline-none bg-white"
-                      />
-                    </div>
+                  <div className="grid sm:grid-cols-2 gap-4 mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <Input
+                      label="Company / Enterprise Name"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="e.g. Acme Industries Ltd."
+                    />
+                    <Input
+                      label="GSTIN Number"
+                      value={gstNumber}
+                      onChange={(e) => setGstNumber(e.target.value)}
+                      placeholder="e.g. 27AABCS1234F1Z8"
+                    />
                   </div>
                 )}
               </div>
             </div>
 
-            {/* 2. Shipping Address */}
-            <div className="bg-white border border-black/10 rounded-xl p-6 shadow-sm space-y-4">
-              <h2 className="font-bold text-base text-ink flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-brand text-white text-xs flex items-center justify-center font-display">
+            {/* 2. Delivery & Site Address */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-5">
+              <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
+                <span className="w-6 h-6 rounded-full bg-primary-700 text-white text-xs font-bold flex items-center justify-center">
                   2
                 </span>
-                Delivery Address
-              </h2>
-
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">Flat / Wing / Building / Street *</label>
-                <input
-                  type="text"
-                  required
-                  value={line1}
-                  onChange={(e) => setLine1(e.target.value)}
-                  placeholder="Plot 42, Sector 19, Vashi"
-                  className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                />
+                <h2 className="font-bold text-base font-display text-dark">
+                  Delivery Site / Premise Address
+                </h2>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">Area / Landmark / Floor</label>
-                <input
-                  type="text"
-                  value={line2}
-                  onChange={(e) => setLine2(e.target.value)}
-                  placeholder="Near APMC Market, 3rd Floor"
-                  className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                />
-              </div>
+              <Input
+                label="Building / Industrial Plot / Street Address"
+                required
+                value={line1}
+                onChange={(e) => setLine1(e.target.value)}
+                placeholder="e.g. Plot C-12, Sector 19, Turbhe MIDC"
+              />
+
+              <Input
+                label="Floor / Unit / Landmark (Optional)"
+                value={line2}
+                onChange={(e) => setLine2(e.target.value)}
+                placeholder="e.g. 3rd Floor, Near Toll Plaza"
+              />
 
               <div className="grid sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">City *</label>
-                  <input
-                    type="text"
-                    required
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">State *</label>
-                  <input
-                    type="text"
-                    required
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Pincode *</label>
-                  <input
-                    type="text"
-                    required
-                    value={pincode}
-                    onChange={(e) => setPincode(e.target.value)}
-                    placeholder="400703"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
+                <Input
+                  label="City"
+                  required
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                />
+                <Input
+                  label="State"
+                  required
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                />
+                <Input
+                  label="PIN Code"
+                  required
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value)}
+                  placeholder="e.g. 400705"
+                />
               </div>
             </div>
 
-            {/* 3. Delivery Method */}
-            <div className="bg-white border border-black/10 rounded-xl p-6 shadow-sm space-y-3">
-              <h2 className="font-bold text-base text-ink flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-brand text-white text-xs flex items-center justify-center font-display">
+            {/* 3. Delivery Method & Payment */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-5">
+              <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
+                <span className="w-6 h-6 rounded-full bg-primary-700 text-white text-xs font-bold flex items-center justify-center">
                   3
                 </span>
-                Logistics Preference
-              </h2>
-
-              <div className="grid sm:grid-cols-3 gap-3">
-                <label
-                  className={`p-3.5 border rounded-lg cursor-pointer flex flex-col justify-between transition-all ${
-                    deliveryMethod === "standard"
-                      ? "border-brand bg-brand/5 ring-1 ring-brand"
-                      : "border-black/15 hover:border-black/30"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Truck className="w-4 h-4 text-brand" />
-                    <input
-                      type="radio"
-                      name="delivery"
-                      checked={deliveryMethod === "standard"}
-                      onChange={() => setDeliveryMethod("standard")}
-                      className="text-brand"
-                    />
-                  </div>
-                  <p className="text-xs font-bold text-ink">Standard Transport</p>
-                  <p className="text-[11px] text-steel mt-0.5">2-3 business days (Free &gt; ₹5,000)</p>
-                </label>
-
-                <label
-                  className={`p-3.5 border rounded-lg cursor-pointer flex flex-col justify-between transition-all ${
-                    deliveryMethod === "express"
-                      ? "border-brand bg-brand/5 ring-1 ring-brand"
-                      : "border-black/15 hover:border-black/30"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Truck className="w-4 h-4 text-amber" />
-                    <input
-                      type="radio"
-                      name="delivery"
-                      checked={deliveryMethod === "express"}
-                      onChange={() => setDeliveryMethod("express")}
-                      className="text-brand"
-                    />
-                  </div>
-                  <p className="text-xs font-bold text-ink">Express 24-Hr Courier</p>
-                  <p className="text-[11px] text-steel mt-0.5">Next morning dispatch (+ ₹450)</p>
-                </label>
-
-                <label
-                  className={`p-3.5 border rounded-lg cursor-pointer flex flex-col justify-between transition-all ${
-                    deliveryMethod === "pickup"
-                      ? "border-brand bg-brand/5 ring-1 ring-brand"
-                      : "border-black/15 hover:border-black/30"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Building2 className="w-4 h-4 text-steel" />
-                    <input
-                      type="radio"
-                      name="delivery"
-                      checked={deliveryMethod === "pickup"}
-                      onChange={() => setDeliveryMethod("pickup")}
-                      className="text-brand"
-                    />
-                  </div>
-                  <p className="text-xs font-bold text-ink">Self Warehouse Pickup</p>
-                  <p className="text-[11px] text-steel mt-0.5">Navi Mumbai Depot (Free)</p>
-                </label>
+                <h2 className="font-bold text-base font-display text-dark">
+                  Logistics &amp; Payment Preference
+                </h2>
               </div>
-            </div>
 
-            {/* 4. Payment Method */}
-            <div className="bg-white border border-black/10 rounded-xl p-6 shadow-sm space-y-3">
-              <h2 className="font-bold text-base text-ink flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-brand text-white text-xs flex items-center justify-center font-display">
-                  4
-                </span>
-                Payment Options
-              </h2>
-
-              <div className="space-y-2.5">
-                <label
-                  className={`p-4 border rounded-lg cursor-pointer flex items-center justify-between transition-all ${
-                    paymentMethod === "mock"
-                      ? "border-brand bg-brand/5 ring-1 ring-brand"
-                      : "border-black/15 hover:border-black/30"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <CreditCard className="w-5 h-5 text-brand" />
-                    <div>
-                      <p className="text-xs font-bold text-ink">Instant Mock Payment (Development Safe Mode)</p>
-                      <p className="text-[11px] text-steel">Simulates real UPI/Card payment without charging real money</p>
-                    </div>
-                  </div>
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === "mock"}
-                    onChange={() => setPaymentMethod("mock")}
-                    className="text-brand"
-                  />
+              <div className="space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                  Delivery Dispatch Option
                 </label>
-
-                <label
-                  className={`p-4 border rounded-lg cursor-pointer flex items-center justify-between transition-all ${
-                    paymentMethod === "cod"
-                      ? "border-brand bg-brand/5 ring-1 ring-brand"
-                      : "border-black/15 hover:border-black/30"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Banknote className="w-5 h-5 text-green-700" />
-                    <div>
-                      <p className="text-xs font-bold text-ink">Cash / Cheque on Delivery (COD)</p>
-                      <p className="text-[11px] text-steel">Pay upon equipment delivery & physical inspection</p>
+                <div className="grid sm:grid-cols-3 gap-3">
+                  {[
+                    {
+                      id: "standard",
+                      title: "Standard Logistics",
+                      desc: "2-3 business days. Free above ₹5000.",
+                      fee: subtotal > 5000 ? "FREE" : "₹250",
+                    },
+                    {
+                      id: "express",
+                      title: "Express Van Delivery",
+                      desc: "Next-day dispatch across MMR.",
+                      fee: "₹450",
+                    },
+                    {
+                      id: "pickup",
+                      title: "Workshop Self Pickup",
+                      desc: "Collect from Vashi/Turbhe workshop.",
+                      fee: "FREE",
+                    },
+                  ].map((opt) => (
+                    <div
+                      key={opt.id}
+                      onClick={() => setDeliveryMethod(opt.id as any)}
+                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                        deliveryMethod === opt.id
+                          ? "border-primary-700 bg-primary-50/40 shadow-xs ring-1 ring-primary-700"
+                          : "border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-xs font-bold text-dark">
+                        <span>{opt.title}</span>
+                        <span className="text-primary-700">{opt.fee}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1">{opt.desc}</p>
                     </div>
-                  </div>
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === "cod"}
-                    onChange={() => setPaymentMethod("cod")}
-                    className="text-brand"
-                  />
-                </label>
+                  ))}
+                </div>
+              </div>
 
-                <label
-                  className={`p-4 border rounded-lg cursor-pointer flex items-center justify-between transition-all ${
-                    paymentMethod === "razorpay"
-                      ? "border-brand bg-brand/5 ring-1 ring-brand"
-                      : "border-black/15 hover:border-black/30"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <CreditCard className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <p className="text-xs font-bold text-ink">Razorpay Gateway (Netbanking / Cards / UPI)</p>
-                      <p className="text-[11px] text-steel">Supports live & test mode Razorpay credentials</p>
-                    </div>
-                  </div>
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === "razorpay"}
-                    onChange={() => setPaymentMethod("razorpay")}
-                    className="text-brand"
-                  />
+              <div className="space-y-2 pt-4 border-t border-slate-100">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                  Payment Method
                 </label>
+                <div className="grid sm:grid-cols-3 gap-3">
+                  {[
+                    {
+                      id: "mock",
+                      title: "Corporate NetBanking / UPI",
+                      desc: "Instant verified transaction",
+                    },
+                    {
+                      id: "cod",
+                      title: "Cash on Delivery",
+                      desc: "Pay on receipt at site",
+                    },
+                    {
+                      id: "razorpay",
+                      title: "Commercial Card / PO",
+                      desc: "Credit cards & corporate PO",
+                    },
+                  ].map((pay) => (
+                    <div
+                      key={pay.id}
+                      onClick={() => setPaymentMethod(pay.id as any)}
+                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                        paymentMethod === pay.id
+                          ? "border-primary-700 bg-primary-50/40 shadow-xs ring-1 ring-primary-700"
+                          : "border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-dark">{pay.title}</div>
+                      <p className="text-[11px] text-slate-500 mt-1">{pay.desc}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Right Col: Order Summary */}
-          <div className="space-y-4">
-            <div className="bg-white border border-black/10 rounded-xl p-5 shadow-sm space-y-4 sticky top-20">
-              <h3 className="font-display font-bold text-base text-ink pb-3 border-b border-black/10">
-                Order Summary ({cartProducts.reduce((s, i) => s + (i?.quantity || 1), 0)} items)
+          {/* Right Column: Order Review & Submit */}
+          <div className="lg:col-span-4 space-y-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-5">
+              <h3 className="font-display font-extrabold text-base text-dark pb-3 border-b border-slate-100">
+                Order Review ({cartProducts.length} items)
               </h3>
 
-              {/* Items Mini List */}
-              <div className="space-y-2.5 max-h-52 overflow-y-auto pr-1">
-                {cartProducts.map((p) => (
-                  <div key={p?._id} className="flex items-center justify-between text-xs">
-                    <div className="truncate pr-2">
-                      <p className="font-semibold text-ink truncate">{p?.name}</p>
-                      <p className="text-[10px] text-steel">Qty: {p?.quantity}</p>
+              <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 text-xs pr-1">
+                {cartProducts.map((item) => (
+                  <div key={item?._id} className="py-2.5 flex items-center justify-between gap-2">
+                    <div className="truncate flex-1">
+                      <span className="font-semibold text-dark truncate block">{item?.name}</span>
+                      <span className="text-[10px] text-slate-400">Qty: {item?.quantity}</span>
                     </div>
-                    <span className="font-bold text-ink shrink-0">
-                      ₹{(((p?.discountPrice || p?.price) || 0) * (p?.quantity || 1)).toLocaleString("en-IN")}
+                    <span className="font-bold text-dark shrink-0">
+                      ₹{(((item?.discountPrice || item?.price) ?? 0) * (item?.quantity || 1)).toLocaleString("en-IN")}
                     </span>
                   </div>
                 ))}
               </div>
 
-              <div className="space-y-2 text-xs pt-3 border-t border-black/10">
-                <div className="flex justify-between text-steel">
+              <div className="space-y-2.5 text-xs pt-3 border-t border-slate-100">
+                <div className="flex justify-between text-slate-600">
                   <span>Subtotal</span>
-                  <span className="text-ink font-medium">₹{subtotal.toLocaleString("en-IN")}</span>
+                  <span className="text-dark font-bold">₹{subtotal.toLocaleString("en-IN")}</span>
                 </div>
-                <div className="flex justify-between text-steel">
-                  <span>GST (18%)</span>
-                  <span className="text-ink font-medium">₹{gst.toLocaleString("en-IN")}</span>
+                <div className="flex justify-between text-slate-600">
+                  <span>GST (18% Statutory)</span>
+                  <span className="text-dark font-bold">₹{gst.toLocaleString("en-IN")}</span>
                 </div>
-                <div className="flex justify-between text-steel">
-                  <span>Shipping</span>
-                  <span>{shippingFee === 0 ? <strong className="text-green-700">FREE</strong> : `₹${shippingFee}`}</span>
+                <div className="flex justify-between text-slate-600">
+                  <span>Shipping Fee</span>
+                  <span className="text-dark font-bold">
+                    {shippingFee === 0 ? <strong className="text-emerald-700">FREE</strong> : `₹${shippingFee}`}
+                  </span>
                 </div>
-                <div className="pt-3 border-t border-black/10 flex justify-between items-baseline">
+
+                <div className="pt-4 border-t border-slate-200 flex justify-between items-baseline">
                   <div>
-                    <span className="text-sm font-bold text-ink">Grand Total</span>
-                    <p className="text-[10px] text-steel">Tax Invoice generated upon submission</p>
+                    <span className="text-base font-extrabold text-dark font-display">
+                      Grand Total
+                    </span>
+                    <p className="text-[10px] text-slate-400">Includes 18% GST invoice</p>
                   </div>
-                  <span className="text-xl font-bold text-brand font-display">
+                  <span className="text-2xl font-extrabold text-primary-700 font-display">
                     ₹{grandTotal.toLocaleString("en-IN")}
                   </span>
                 </div>
               </div>
 
-              {checkoutError && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{checkoutError}</span>
-                </div>
-              )}
-
-              <button
+              <Button
+                variant="primary"
+                size="lg"
                 type="submit"
-                disabled={isSubmitting || cartProducts.length === 0}
-                className="w-full py-3.5 bg-brand hover:bg-brand-dark text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 shadow-md disabled:opacity-50 transition-colors"
+                className="w-full"
+                isLoading={isSubmitting}
+                rightIcon={<ArrowRight className="w-4 h-4" />}
               >
-                {isSubmitting ? "Generating Order..." : "Confirm & Place Order"}
-                <ArrowRight className="w-4 h-4" />
-              </button>
+                Confirm &amp; Place Order
+              </Button>
 
-              <div className="text-[10px] text-steel text-center space-y-1 pt-1">
-                <p>✓ All equipment includes 1-Year Manufacturer Warranty</p>
-                <p>✓ Compliant with IS 15683 & Maharashtra Fire Act</p>
+              <div className="pt-2 text-center text-[10px] text-slate-500 space-y-1">
+                <p className="flex items-center justify-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Statutory Form B Inspection Warranty Included</span>
+                </p>
+                <p>Official GST e-invoice generated automatically upon placement.</p>
               </div>
             </div>
           </div>

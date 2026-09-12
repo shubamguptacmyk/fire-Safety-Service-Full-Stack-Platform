@@ -289,6 +289,10 @@ export const adminUserController = {
     const targetUser = await User.findOne({ _id: id, role: { $in: STAFF_ROLES } });
     if (!targetUser) throw ApiError.notFound("Admin or staff user not found");
 
+    if (targetUser.role === "super_admin" && req.user?.role !== "super_admin") {
+      throw ApiError.forbidden("Only a Super Admin can change a Super Admin password.");
+    }
+
     targetUser.passwordHash = newPassword; // Pre-save hook hashes it
     targetUser.mustChangePassword = false;
     targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
@@ -318,6 +322,10 @@ export const adminUserController = {
 
     const targetUser = await User.findOne({ _id: id, role: { $in: STAFF_ROLES } });
     if (!targetUser) throw ApiError.notFound("Admin or staff user not found");
+
+    if (targetUser.role === "super_admin") {
+      throw ApiError.forbidden("Super Admin passwords cannot be reset via temporary password generation.");
+    }
 
     const tempPassword = generateTemporaryPassword();
 
@@ -364,10 +372,13 @@ export const adminUserController = {
       if (activeSuperAdmins <= 1) {
         throw ApiError.badRequest("Cannot delete the last active Super Admin account.");
       }
+      if (req.user?.role !== "super_admin") {
+        throw ApiError.forbidden("Only a Super Admin can delete a Super Admin account.");
+      }
     }
 
     await User.findByIdAndDelete(id);
-    await RefreshToken.updateMany({ user: id }, { revoked: true });
+    await RefreshToken.updateMany({ user: targetUser._id }, { revoked: true });
 
     // Record audit log
     await AuditLog.create({

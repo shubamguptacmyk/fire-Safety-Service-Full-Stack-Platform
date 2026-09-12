@@ -18,6 +18,11 @@ export interface IBlogPost extends Document {
   tags: string[];
   seoTitle?: string;
   seoDescription?: string;
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+  };
   readTime: number;
   status: BlogStatus;
   publishedAt?: Date;
@@ -78,6 +83,11 @@ const blogPostSchema = new Schema<IBlogPost>(
     seoDescription: {
       type: String,
       trim: true,
+    },
+    seo: {
+      metaTitle: { type: String, trim: true },
+      metaDescription: { type: String, trim: true },
+      keywords: { type: [String], default: [] },
     },
     readTime: {
       type: Number,

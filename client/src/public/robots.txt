@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /account
-Disallow: /checkout
-Disallow: /orders
-
-Sitemap: https://www.akfiresafety.example/sitemap.xml

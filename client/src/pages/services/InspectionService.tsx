@@ -1,5 +1,10 @@
 import { Link } from "react-router-dom";
 import Seo from "@/components/Seo";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Badge from "@/components/Badge";
+import Button from "@/components/ui/Button";
+import CTASection from "@/components/ui/CTASection";
+import TrustBadge from "@/components/ui/TrustBadge";
 import {
   ClipboardCheck,
   ShieldCheck,
@@ -11,6 +16,11 @@ import {
   Phone,
   FileText,
   Clock,
+  Sparkles,
+  Zap,
+  Droplets,
+  Bell,
+  Scale,
 } from "lucide-react";
 
 export default function InspectionService() {
@@ -19,10 +29,11 @@ export default function InspectionService() {
       title: "Extinguisher Weight & Gauge Diagnostics",
       frequency: "Monthly / Quarterly",
       standard: "IS 2190:2010",
+      icon: Scale,
       description:
         "Physical inspection of nitrogen pressure needles, mechanical tamper seals, discharge horn obstructions, and precision weight verification for CO2 gas loss exceeding 10%.",
       points: [
-        "Pressure gauge needle within 15-18 kg/cm² zone",
+        "Pressure gauge needle within 15-18 kg/cm² operating zone",
         "Discharge nozzle unobstructed by debris or insect nests",
         "Safety pin and tamper-evident wire seal intact",
         "Gross weight logged against tare weight stamped on body",
@@ -32,6 +43,7 @@ export default function InspectionService() {
       title: "Fire Hydrant & Landing Valve Flow Tests",
       frequency: "Quarterly",
       standard: "IS 5290 / IS 3844",
+      icon: Droplets,
       description:
         "Dynamic pitot tube flow rate and residual pressure measurements at the remotest hydrant landing valve to guarantee compliance with municipal firefighting standards.",
       points: [
@@ -45,6 +57,7 @@ export default function InspectionService() {
       title: "Automatic Sprinkler System Audits",
       frequency: "Quarterly / Biannual",
       standard: "IS 15105 / NFPA 25",
+      icon: Activity,
       description:
         "Full test of alarm check valves, retard chambers, water motor gongs, inspector test valves, and sprinkler head clearance from storage racks.",
       points: [
@@ -55,9 +68,10 @@ export default function InspectionService() {
       ],
     },
     {
-      title: "Fire Pump House Auto-Sequence Diagnostic",
+      title: "Fire Pump House Auto-Sequence Diagnostics",
       frequency: "Monthly",
       standard: "IS 15301 / NBC Part 4",
+      icon: Zap,
       description:
         "Live simulation of pressure drops to confirm sequential automatic staging of Jockey, Main Electric, and Standby Diesel engine fire pumps.",
       points: [
@@ -71,6 +85,7 @@ export default function InspectionService() {
       title: "Smoke Detector Sensitivity & Loop Testing",
       frequency: "Bi-Monthly / Quarterly",
       standard: "IS 2189 / EN 54",
+      icon: Bell,
       description:
         "Calibrated aerosol smoke and heat spray testing across addressable loops, response indicator illumination checks, and central panel fault diagnostics.",
       points: [
@@ -80,138 +95,165 @@ export default function InspectionService() {
         "Loop circuit resistance and earth fault diagnostics",
       ],
     },
-    {
-      title: "Emergency Exit Lighting & Signage Survey",
-      frequency: "Monthly",
-      standard: "IS 1644 / NBC Part 4",
-      description:
-        "Photometric verification of photoluminescent glow duration and emergency battery-backed directional exit lighting along all designated egress pathways.",
-      points: [
-        "Battery discharge test exceeding 90 minutes runtime",
-        "Photoluminescent luminance after ambient light shutoff",
-        "Emergency panic push-bars on fire doors functioning smoothly",
-        "Corridor egress free from temporary carton storage blockages",
-      ],
-    },
   ];
 
   return (
     <>
       <Seo
-        title="Fire Safety Equipment Inspection & Testing — AK Fire Safety Service"
-        description="Comprehensive quarterly fire fighting equipment inspection, hydrant flow testing, and sprinkler diagnostic services in Navi Mumbai and Mumbai MMR."
+        title="Periodic Safety Inspection & Pressure Audits — Shubam Fire Protection"
+        description="Comprehensive fire safety inspection, flow rate testing, and pressure audits conforming to IS 2190, IS 3844, and IS 15105 across Navi Mumbai."
       />
 
-      {/* Hero */}
-      <div className="bg-ink text-white py-12 border-b-4 border-amber">
-        <div className="max-w-6xl mx-auto px-4">
-          <span className="text-xs font-bold font-mono tracking-widest text-amber uppercase">
-            Preventative Safety Engineering
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-display font-bold mt-2 text-white">
-            Fire Safety Equipment Inspection & Diagnostic Testing
-          </h1>
-          <p className="text-sm sm:text-base text-white/80 max-w-2xl mt-3 leading-relaxed">
-            Statutory routine visual surveys, live hydrostatic pressure testing, and hydraulic flow audits performed by
-            certified fire safety technicians to guarantee system readiness.
-          </p>
+      {/* Hero Header */}
+      <section className="bg-slate-900 text-white py-12 lg:py-16 border-b border-slate-800 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 opacity-90" />
+        <div className="absolute right-0 top-0 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link
-              to="/book-service"
-              className="px-5 py-2.5 bg-brand hover:bg-brand-dark text-white text-xs font-bold rounded shadow-md transition-colors flex items-center gap-2"
-            >
-              <ClipboardCheck className="w-4 h-4" /> Book On-Site Inspection
-            </Link>
-            <Link
-              to="/service-history"
-              className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded border border-white/20 transition-colors flex items-center gap-2"
-            >
-              <Clock className="w-4 h-4" /> View Sample Job Card Records
-            </Link>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumb
+            items={[
+              { label: "Services", href: "/services" },
+              { label: "Periodic Safety Inspection & Audits" },
+            ]}
+            className="mb-6 text-slate-400 [&_a]:text-slate-400 hover:[&_a]:text-white"
+          />
+
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary-950 text-primary-300 border border-primary-800 mb-3">
+              <ClipboardCheck className="w-3.5 h-3.5" /> Preventative Maintenance & Testing
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-white">
+              Periodic Safety Inspection & Pressure Diagnostics
+            </h1>
+            <p className="text-slate-300 text-base sm:text-lg mt-4 leading-relaxed">
+              Ensure emergency readiness before disaster strikes. Our certified technicians carry out systematic diagnostic tests across your fire extinguishers, hydrant landing valves, sprinkler alarm gongs, and detection loops with instant digital logging.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Button asChild size="lg" variant="primary">
+                <Link to="/book-service?type=Inspection">
+                  Book Inspection Visit <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="white">
+                <Link to="/services/amc">View Annual AMC Plans</Link>
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <main className="max-w-6xl mx-auto px-4 py-12 space-y-12">
+      {/* Trust Badges */}
+      <TrustBadge />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
         {/* Inspection Modules Grid */}
-        <section className="space-y-6">
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-2xl font-display font-bold text-ink">Comprehensive Inspection Protocols</h2>
-            <p className="text-xs sm:text-sm text-steel mt-1">
-              Every apparatus on your premises tested against strict Bureau of Indian Standards failure tolerances.
+        <div>
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-wider text-primary-600">
+              Technical Modules
+            </span>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mt-1">
+              Comprehensive Fire Apparatus Inspection Scope
+            </h2>
+            <p className="text-slate-600 text-sm mt-2">
+              Every inspection is conducted according to Bureau of Indian Standards (BIS) and NBC Part IV engineering guidelines.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {inspectionModules.map((mod, idx) => (
-              <div
-                key={idx}
-                className="bg-white border border-black/10 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-4"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="px-2 py-0.5 rounded bg-paper text-brand font-mono text-[11px] font-bold">
-                      {mod.standard}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {inspectionModules.map((module, idx) => {
+              const Icon = module.icon;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white rounded-3xl border border-slate-200/80 p-7 sm:p-8 flex flex-col justify-between shadow-sm hover:shadow-xl hover:border-primary-200 transition-all duration-300"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center">
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <span className="px-2.5 py-1 bg-slate-100 rounded-full text-slate-700 font-mono text-[11px] font-semibold">
+                        {module.standard}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-bold text-slate-900 font-display">
+                      {module.title}
+                    </h3>
+                    <span className="inline-block text-xs font-bold text-primary-600 mt-1">
+                      Frequency: {module.frequency}
                     </span>
-                    <span className="text-[10px] text-steel flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {mod.frequency}
-                    </span>
+                    <p className="text-xs sm:text-sm text-slate-600 mt-2.5 leading-relaxed">
+                      {module.description}
+                    </p>
+
+                    <div className="mt-6 pt-5 border-t border-slate-100">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                        Key Verification Checkpoints:
+                      </h4>
+                      <ul className="space-y-2 text-xs text-slate-700">
+                        {module.points.map((pt, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-primary-600 shrink-0 mt-0.5" />
+                            <span className="leading-snug">{pt}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
 
-                  <h3 className="font-display font-bold text-base text-ink">{mod.title}</h3>
-                  <p className="text-xs text-steel mt-2 leading-relaxed">{mod.description}</p>
+                  <div className="mt-8 pt-4 border-t border-slate-100">
+                    <Button asChild variant="secondary" className="w-full">
+                      <Link to={`/book-service?type=Inspection&scope=${encodeURIComponent(module.title)}`}>
+                        Schedule This Inspection <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-
-                <div className="pt-3 border-t border-black/5 space-y-1.5">
-                  <strong className="text-ink text-[11px] block">Verification Checklist:</strong>
-                  {mod.points.map((pt, pIdx) => (
-                    <div key={pIdx} className="flex items-start gap-1.5 text-xs text-steel">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-brand shrink-0 mt-0.5" />
-                      <span>{pt}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </section>
+        </div>
 
-        {/* Why Inspection Fails Callout */}
-        <section className="bg-amber-50/70 border border-amber-200 rounded-2xl p-6 sm:p-8 space-y-4">
-          <div className="flex items-center gap-2 text-amber-900 font-display font-bold text-lg">
-            <AlertTriangle className="w-5 h-5 text-amber-600" /> The Real Risk: Neglected Fire Equipment
-          </div>
-          <p className="text-xs sm:text-sm text-amber-950 leading-relaxed max-w-3xl">
-            In over 68% of commercial building fires investigated in India, fire extinguishers failed to operate due to
-            clogged discharge nozzles, dry chemical powder caking, or undetectable micro-leakage in pressure valves.
-            Periodic physical inspections detect and resolve these defects before lives and property are jeopardized.
-          </p>
-          <div className="pt-2">
-            <Link
-              to="/book-service"
-              className="inline-flex items-center gap-2 text-xs font-bold text-brand hover:underline"
-            >
-              Book an Inspection for your premises today <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </section>
-
-        {/* Quick CTA */}
-        <section className="bg-ink text-white rounded-2xl p-6 sm:p-8 flex flex-wrap items-center justify-between gap-6">
-          <div className="space-y-1">
-            <h3 className="text-xl font-display font-bold text-white">Need an Emergency Safety Audit or Form B Sign-Off?</h3>
-            <p className="text-xs text-white/70">
-              Our licensed engineers can be dispatched within 4 hours across Navi Mumbai, Taloja, Thane, and Mumbai MMR.
+        {/* Digital Tagging & Barcoding */}
+        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-12 border border-slate-800 grid lg:grid-cols-3 gap-8 items-center shadow-xl">
+          <div className="lg:col-span-2 space-y-4">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-950 text-primary-300 border border-primary-800">
+              <ShieldCheck className="w-3.5 h-3.5" /> Asset Integrity Tracking
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight">
+              QR Barcode Tagging & Digital Maintenance Logs
+            </h3>
+            <p className="text-slate-300 text-sm leading-relaxed">
+              Every inspected fire extinguisher and hydrant station is stamped with a weather-resistant metallic or vinyl QR inspection tag. Technicians log test results directly to the cloud, giving you real-time visibility into equipment health, hydro-test expiration dates, and inspection history directly in your customer portal.
             </p>
           </div>
-          <a
-            href="tel:+919800000000"
-            className="px-6 py-2.5 bg-brand hover:bg-brand-dark text-white rounded text-xs font-bold transition-colors flex items-center gap-2 shadow-md"
-          >
-            <Phone className="w-4 h-4" /> Call 24/7 Helpline: +91 98000 00000
-          </a>
-        </section>
+
+          <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-6 text-center shadow-lg space-y-3">
+            <FileText className="w-10 h-10 text-primary-400 mx-auto" />
+            <h4 className="text-base font-bold text-white font-display">Need an Asset Inspection Audit?</h4>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Our technician team can audit up to 100 equipment units per day across Mumbai MMR.
+            </p>
+            <Button asChild variant="primary" className="w-full mt-2">
+              <Link to="/book-service?type=Inspection">
+                Book Audit Today
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <CTASection
+          title="Ready to Ensure Complete Fire Protection Readiness?"
+          subtitle="Shubam Fire Protection provides on-demand inspections, quarterly AMC maintenance, and Form B compliance certification."
+          primaryBtnText="Book Inspection"
+          primaryBtnLink="/book-service?type=Inspection"
+          secondaryBtnText="Explore AMC Packages"
+          secondaryBtnLink="/services/amc"
+        />
       </main>
     </>
   );

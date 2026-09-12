@@ -1,7 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { galleryService } from "@/services/galleryService";
 import Seo from "@/components/Seo";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Badge from "@/components/Badge";
+import Button from "@/components/ui/Button";
+import TrustBadge from "@/components/ui/TrustBadge";
+import CTASection from "@/components/ui/CTASection";
 import {
   X,
   ChevronLeft,
@@ -11,6 +16,7 @@ import {
   Calendar,
   Layers,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 
 interface GalleryCard {
@@ -63,7 +69,7 @@ const FALLBACK_ITEMS: GalleryCard[] = [
     category: "Suppression Systems",
     location: "Five-Star Hotel Banquet, Vashi",
     image:
-      "https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=1200&q=80",
     description:
       "UL-300 compliant wet chemical fire suppression system covering deep fat fryers, cooking ranges, and grease exhaust ducts.",
     projectDate: "December 2023",
@@ -104,87 +110,98 @@ export default function Gallery() {
     "Safety Training",
   ];
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["public-gallery", filter],
+  const { data: galleryData, isLoading } = useQuery({
+    queryKey: ["gallery-items", filter],
     queryFn: () =>
       galleryService.getGalleryItems({
         category: filter === "All" ? undefined : filter,
       }),
   });
 
-  const apiItems = data?.items || [];
-
-  const items: GalleryCard[] =
+  const apiItems = galleryData?.items || [];
+  const displayItems: GalleryCard[] =
     apiItems.length > 0
-      ? apiItems.map((item) => ({
+      ? apiItems.map((item: any) => ({
           id: item._id,
           title: item.title,
           category: item.category,
-          location: item.location || "Navi Mumbai, Maharashtra",
-          image: item.imageUrl,
+          location: item.location || "Navi Mumbai, MH",
+          image: item.imageUrl || item.image,
           description: item.description || "",
           projectDate: item.projectDate,
         }))
-      : FALLBACK_ITEMS.filter(
-          (item) => filter === "All" || item.category === filter
-        );
+      : FALLBACK_ITEMS;
 
-  // Keyboard navigation for lightbox
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (lightboxIndex === null) return;
-      if (e.key === "Escape") setLightboxIndex(null);
-      if (e.key === "ArrowLeft") {
-        setLightboxIndex((prev) =>
-          prev !== null ? (prev > 0 ? prev - 1 : items.length - 1) : null
-        );
-      }
-      if (e.key === "ArrowRight") {
-        setLightboxIndex((prev) =>
-          prev !== null ? (prev < items.length - 1 ? prev + 1 : 0) : null
-        );
-      }
-    }
+  const filteredItems = displayItems.filter((item) => {
+    if (filter === "All") return true;
+    return item.category.toLowerCase() === filter.toLowerCase();
+  });
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [lightboxIndex, items.length]);
+  function openLightbox(index: number) {
+    setLightboxIndex(index);
+  }
 
-  const activeItem = lightboxIndex !== null ? items[lightboxIndex] : null;
+  function closeLightbox() {
+    setLightboxIndex(null);
+  }
+
+  function prevImage() {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((lightboxIndex - 1 + filteredItems.length) % filteredItems.length);
+  }
+
+  function nextImage() {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((lightboxIndex + 1) % filteredItems.length);
+  }
+
+  const currentLightbox = lightboxIndex !== null ? filteredItems[lightboxIndex] : null;
 
   return (
     <>
       <Seo
-        title="Project & Installation Gallery — AK Fire Safety Service"
-        description="View our recent fire safety installations: wet riser hydrants, FM-200 gas suppression, workshop hydro-testing, and corporate evacuation drills in Navi Mumbai."
+        title="Project & Installation Gallery — Shubam Fire Protection"
+        description="View real-world fire protection installations, wet riser hydrant networks, server room gas flooding systems, and live fire drills conducted across Maharashtra."
       />
 
-      <div className="bg-ink text-white py-12 border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4">
-          <span className="text-xs uppercase tracking-wider text-amber font-semibold">
-            Field Installations & Turnkey Systems
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-display font-bold mt-1">
-            Project & Engineering Gallery
-          </h1>
-          <p className="text-white/70 text-sm mt-2 max-w-xl leading-relaxed">
-            Photographs from real on-site installations, workshop hydrostatic testing, and corporate
-            evacuation drills across Maharashtra.
-          </p>
-        </div>
-      </div>
+      {/* Hero Header */}
+      <section className="bg-slate-900 text-white py-12 lg:py-16 border-b border-slate-800 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 opacity-90" />
+        <div className="absolute right-0 top-0 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl pointer-events-none" />
 
-      <main className="max-w-6xl mx-auto px-4 py-12 space-y-8">
-        {/* Filter Pills */}
-        <div className="flex flex-wrap gap-2">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumb
+            items={[{ label: "Project Gallery" }]}
+            className="mb-6 text-slate-400 [&_a]:text-slate-400 hover:[&_a]:text-white"
+          />
+
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary-950 text-primary-300 border border-primary-800 mb-3">
+              <Layers className="w-3.5 h-3.5" /> Proven Engineering Track Record
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-white">
+              Project Execution & Installation Gallery
+            </h1>
+            <p className="text-slate-300 text-base sm:text-lg mt-4 leading-relaxed">
+              Explore our turnkey engineering installations, automated sprinkler grids, high-pressure hydrant risers, hydrostatic testing facilities, and live society evacuation drills across Navi Mumbai and Mumbai MMR.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <TrustBadge />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
+        {/* Categories Bar */}
+        <div className="flex items-center justify-center gap-2 overflow-x-auto pb-2">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
                 filter === cat
-                  ? "bg-brand text-white shadow-sm"
-                  : "bg-paper text-ink hover:bg-gray-200 border border-black/10"
+                  ? "bg-primary-600 text-white shadow-md"
+                  : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900"
               }`}
             >
               {cat}
@@ -194,49 +211,59 @@ export default function Gallery() {
 
         {/* Gallery Grid */}
         {isLoading ? (
-          <div className="py-20 text-center space-y-2">
-            <Loader2 className="w-8 h-8 animate-spin text-brand mx-auto" />
-            <p className="text-xs text-steel">Loading project gallery...</p>
+          <div className="py-20 text-center space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary-600 mx-auto" />
+            <p className="text-xs text-slate-500">Loading project installations...</p>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center max-w-md mx-auto">
+            <Layers className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h3 className="font-bold text-slate-900 text-base font-display">No projects found in this category</h3>
+            <p className="text-xs text-slate-500 mt-1">Select &apos;All&apos; to view all completed installations.</p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {items.map((item, idx) => (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredItems.map((item, idx) => (
               <div
                 key={item.id}
-                onClick={() => setLightboxIndex(idx)}
-                className="group bg-white border border-black/10 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                onClick={() => openLightbox(idx)}
+                className="group cursor-pointer bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl hover:border-primary-300 transition-all duration-300 flex flex-col"
               >
-                <div className="aspect-[4/3] bg-paper overflow-hidden relative">
+                <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
                   <img
                     src={item.image}
                     alt={item.title}
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src =
-                        "https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=800&q=80";
-                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="p-2.5 rounded-full bg-white/90 text-ink shadow-md flex items-center gap-1.5 text-xs font-semibold">
-                      <Maximize2 className="w-4 h-4" /> Expand Photo
+                  <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="p-3 bg-white/90 rounded-full text-slate-900 shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                      <Maximize2 className="w-5 h-5" />
                     </span>
                   </div>
-                  <span className="absolute top-3 left-3 bg-ink/80 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-sm uppercase tracking-wider">
-                    {item.category}
-                  </span>
+                  <div className="absolute top-3 left-3">
+                    <span className="px-3 py-1 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-bold rounded-full uppercase tracking-wider">
+                      {item.category}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="p-5 flex-1 flex flex-col justify-between">
+                <div className="p-6 flex flex-col justify-between flex-1">
                   <div>
-                    <span className="text-xs text-brand font-semibold flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" /> {item.location}
-                    </span>
-                    <h3 className="font-bold text-sm text-ink font-display mt-1.5 leading-snug group-hover:text-brand transition-colors">
+                    <div className="flex items-center gap-1.5 text-slate-400 text-xs mb-2">
+                      <MapPin className="w-3.5 h-3.5 text-primary-600" />
+                      <span>{item.location}</span>
+                      {item.projectDate && (
+                        <>
+                          <span>•</span>
+                          <span>{item.projectDate}</span>
+                        </>
+                      )}
+                    </div>
+                    <h3 className="font-bold text-base text-slate-900 font-display group-hover:text-primary-700 transition-colors leading-snug">
                       {item.title}
                     </h3>
-                    <p className="text-xs text-steel mt-2 leading-relaxed line-clamp-2">
+                    <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                       {item.description}
                     </p>
                   </div>
@@ -245,92 +272,66 @@ export default function Gallery() {
             ))}
           </div>
         )}
+
+        {/* CTA Section */}
+        <CTASection
+          title="Looking for Turnkey Fire Protection for Your Facility?"
+          subtitle="Shubam Fire Protection designs, fabricates, and commissions turnkey wet risers, clean agent flooding, and sprinkler grids with full CFO approval."
+          primaryBtnText="Request Project Consultation"
+          primaryBtnLink="/request-quote"
+          secondaryBtnText="Book Site Inspection"
+          secondaryBtnLink="/book-service"
+        />
       </main>
 
       {/* Lightbox Modal */}
-      {activeItem && lightboxIndex !== null && (
-        <div
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setLightboxIndex(null)}
-        >
-          <div
-            className="relative max-w-4xl w-full bg-ink text-white rounded-2xl overflow-hidden shadow-2xl border border-white/10"
-            onClick={(e) => e.stopPropagation()}
+      {currentLightbox && (
+        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+          <button
+            onClick={closeLightbox}
+            className="absolute top-5 right-5 text-white/70 hover:text-white p-2 rounded-full bg-white/10 transition-colors"
           >
-            {/* Close Button */}
-            <button
-              onClick={() => setLightboxIndex(null)}
-              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/60 hover:bg-black text-white/80 hover:text-white transition-colors"
-              aria-label="Close Lightbox"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <X className="w-6 h-6" />
+          </button>
 
-            {/* Previous Button */}
-            <button
-              onClick={() =>
-                setLightboxIndex((prev) =>
-                  prev !== null ? (prev > 0 ? prev - 1 : items.length - 1) : null
-                )
-              }
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/60 hover:bg-black text-white transition-colors"
-              aria-label="Previous Image"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
+          <button
+            onClick={prevImage}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-3 rounded-full bg-white/10 transition-colors"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
 
-            {/* Next Button */}
-            <button
-              onClick={() =>
-                setLightboxIndex((prev) =>
-                  prev !== null ? (prev < items.length - 1 ? prev + 1 : 0) : null
-                )
-              }
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/60 hover:bg-black text-white transition-colors"
-              aria-label="Next Image"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
+          <button
+            onClick={nextImage}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-3 rounded-full bg-white/10 transition-colors"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
 
-            {/* Image Viewer */}
-            <div className="aspect-[16/10] bg-black flex items-center justify-center">
+          <div className="max-w-4xl w-full max-h-[90vh] flex flex-col bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-800">
+            <div className="aspect-16/9 bg-black overflow-hidden flex items-center justify-center">
               <img
-                src={activeItem.image}
-                alt={activeItem.title}
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src =
-                    "https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=80";
-                }}
-                className="w-full h-full object-contain"
+                src={currentLightbox.image}
+                alt={currentLightbox.title}
+                className="max-h-[60vh] w-auto object-contain"
               />
             </div>
-
-            {/* Info Footer */}
-            <div className="p-6 bg-ink border-t border-white/10 space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-bold text-amber uppercase tracking-wider">
-                  {activeItem.category}
-                </span>
-                <span className="text-xs text-white/60">
-                  {lightboxIndex + 1} of {items.length}
-                </span>
-              </div>
-
-              <h2 className="text-lg font-bold font-display text-white">{activeItem.title}</h2>
-
-              <p className="text-xs text-white/70 leading-relaxed">{activeItem.description}</p>
-
-              <div className="pt-2 flex flex-wrap items-center gap-4 text-xs text-white/50 border-t border-white/10">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-brand" /> {activeItem.location}
-                </span>
-                {activeItem.projectDate && (
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" /> Completed: {activeItem.projectDate}
-                  </span>
+            <div className="p-6 text-white space-y-2">
+              <div className="flex items-center gap-2 text-xs text-primary-400 font-bold uppercase tracking-wider">
+                <span>{currentLightbox.category}</span>
+                <span>•</span>
+                <span>{currentLightbox.location}</span>
+                {currentLightbox.projectDate && (
+                  <>
+                    <span>•</span>
+                    <span>{currentLightbox.projectDate}</span>
+                  </>
                 )}
               </div>
+              <h3 className="text-xl font-bold font-display text-white">{currentLightbox.title}</h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                {currentLightbox.description}
+              </p>
             </div>
           </div>
         </div>

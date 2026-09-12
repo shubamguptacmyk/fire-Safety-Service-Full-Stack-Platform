@@ -8,12 +8,19 @@ export interface IBanner extends Document {
   mobileImage?: string;
   link?: string;
   buttonText?: string;
-  position: "home_hero" | "home_middle" | "home_secondary" | "promo_strip" | "category_top" | "services_top" | "deals" | string;
+  position:
+    | "home_hero"
+    | "home_secondary"
+    | "home_middle"
+    | "promo_strip"
+    | "category_top"
+    | "services_top"
+    | "deals";
   sortOrder: number;
   order?: number;
-  isActive: boolean;
   startDate?: Date;
   endDate?: Date;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,7 +56,15 @@ const bannerSchema = new Schema<IBanner>(
     },
     position: {
       type: String,
-      enum: ["home_hero", "home_middle", "home_secondary", "promo_strip", "category_top", "services_top", "deals"],
+      enum: [
+        "home_hero",
+        "home_secondary",
+        "home_middle",
+        "promo_strip",
+        "category_top",
+        "services_top",
+        "deals",
+      ],
       default: "home_hero",
       index: true,
     },
@@ -58,9 +73,9 @@ const bannerSchema = new Schema<IBanner>(
       default: 0,
       index: true,
     },
-    isActive: {
-      type: Boolean,
-      default: true,
+    order: {
+      type: Number,
+      default: 0,
       index: true,
     },
     startDate: {
@@ -69,12 +84,17 @@ const bannerSchema = new Schema<IBanner>(
     endDate: {
       type: Date,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-bannerSchema.index({ position: 1, sortOrder: 1, isActive: 1 });
+bannerSchema.index({ position: 1, sortOrder: 1, order: 1, isActive: 1 });
 
 export const Banner = model<IBanner>("Banner", bannerSchema);

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { orderService } from "@/services/orderService";
 import Seo from "@/components/Seo";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Button from "@/components/ui/Button";
 import {
   Package,
   Truck,
@@ -11,48 +13,10 @@ import {
   ArrowLeft,
   ShieldCheck,
   Phone,
-  Printer,
   AlertTriangle,
   Building,
+  Printer,
 } from "lucide-react";
-
-interface OrderDetailData {
-  orderNumber: string;
-  date: string;
-  status: "Processing" | "Verified" | "Dispatched" | "In Transit" | "Delivered" | "Cancelled";
-  dispatchDetails?: {
-    carrier: string;
-    trackingNumber: string;
-    lrNumber?: string;
-    dispatchDate?: string;
-    estimatedDelivery?: string;
-  };
-  pricing: {
-    subtotal: number;
-    gstAmount: number;
-    shippingFee: number;
-    discount: number;
-    grandTotal: number;
-  };
-  items: Array<{
-    name: string;
-    hsn?: string;
-    quantity: number;
-    price: number;
-    sku?: string;
-  }>;
-  shippingAddress: {
-    fullName: string;
-    companyName?: string;
-    gstin?: string;
-    street: string;
-    city: string;
-    state: string;
-    pincode: string;
-    phone: string;
-  };
-  paymentMethod: string;
-}
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
@@ -68,10 +32,10 @@ export default function OrderDetail() {
             ...apiOrder,
             date: apiOrder.createdAt,
             dispatchDetails: apiOrder.deliveryDetails || {
-              carrier: "V-Trans Safe Express (Industrial Heavy Cargo)",
+              carrier: "Safe Express Logistics (Heavy Industrial Fleet)",
               lrNumber: "LR-MH-449102",
               dispatchDate: new Date(apiOrder.createdAt).toLocaleDateString("en-IN"),
-              estimatedDelivery: "Expected in 2-3 Business Days",
+              estimatedDelivery: "2-3 Business Days",
             },
           });
           return;
@@ -81,13 +45,15 @@ export default function OrderDetail() {
       }
 
       try {
-        const savedOrders = JSON.parse(localStorage.getItem("ak_customer_orders") || "[]");
+        const savedOrders =
+          JSON.parse(localStorage.getItem("shubam_customer_orders") || "null") ||
+          JSON.parse(localStorage.getItem("ak_customer_orders") || "[]");
         const found = savedOrders.find((o: any) => o.orderNumber === id);
         if (found) {
           setOrder({
             ...found,
             dispatchDetails: found.dispatchDetails || {
-              carrier: "V-Trans Safe Express (Industrial Heavy Cargo)",
+              carrier: "Safe Express Logistics (Heavy Industrial Fleet)",
               trackingNumber: "TRK-" + (id?.replace(/[^0-9]/g, "") || "99214"),
               lrNumber: "LR-MH-" + Math.floor(100000 + Math.random() * 900000),
               dispatchDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString("en-IN"),
@@ -104,26 +70,33 @@ export default function OrderDetail() {
   }, [id]);
 
   const timelineSteps = [
-    { label: "Order Placed", status: "completed", date: "Day 1 - 10:30 AM" },
-    { label: "GST & Spec Verified", status: "completed", date: "Day 1 - 02:15 PM" },
-    { label: "Factory Hydro-Tested & Dispatched", status: "completed", date: "Day 2 - 11:00 AM" },
-    { label: "Out for Delivery (Navi Mumbai Hub)", status: order?.status === "Delivered" ? "completed" : "current", date: "Expected Today" },
-    { label: "Delivered & Stamped", status: order?.status === "Delivered" ? "completed" : "pending", date: "Pending" },
+    { label: "Order Received", status: "completed", date: "Day 1 - 10:30 AM" },
+    { label: "GST & Spec Compliance Verified", status: "completed", date: "Day 1 - 02:15 PM" },
+    { label: "Hydrostatic Tested & Stamped", status: "completed", date: "Day 2 - 11:00 AM" },
+    {
+      label: "Out for Delivery (MMR Corridor Hub)",
+      status: order?.status === "Delivered" ? "completed" : "current",
+      date: "In Transit",
+    },
+    {
+      label: "Delivered & Client Acceptance",
+      status: order?.status === "Delivered" ? "completed" : "pending",
+      date: "Pending",
+    },
   ];
 
   if (!order) {
     return (
-      <main className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <AlertTriangle className="w-12 h-12 text-amber mx-auto mb-3" />
-        <h1 className="text-xl font-display font-bold text-ink">Order Not Found</h1>
-        <p className="text-steel text-sm mt-1">
-          Could not locate consignment reference <span className="font-mono">{id}</span>.
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center">
+        <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+        <h1 className="text-2xl font-bold font-display text-dark">Order Not Located</h1>
+        <p className="text-slate-500 text-sm mt-1">
+          Could not locate consignment reference <span className="font-mono text-dark font-bold">{id}</span>.
         </p>
-        <Link
-          to="/orders"
-          className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-brand text-white text-xs font-semibold rounded hover:bg-brand-dark"
-        >
-          <ArrowLeft className="w-4 h-4" /> Return to Orders
+        <Link to="/orders" className="inline-block mt-6">
+          <Button variant="primary" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
+            Return to Orders
+          </Button>
         </Link>
       </main>
     );
@@ -132,232 +105,191 @@ export default function OrderDetail() {
   return (
     <>
       <Seo
-        title={`Order Details #${order.orderNumber} — AK Fire Safety Service`}
+        title={`Order Details #${order.orderNumber} — Shubam Fire Protection`}
         description={`Track shipping and delivery status for fire equipment order ${order.orderNumber}.`}
       />
 
-      <div className="bg-paper border-b border-black/10 py-5">
-        <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <Link
-              to="/orders"
-              className="inline-flex items-center gap-1.5 text-xs text-steel hover:text-brand transition-colors mb-1"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to My Orders
-            </Link>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-display font-bold text-ink">
-                Order <span className="font-mono">{order.orderNumber}</span>
-              </h1>
-              <span className="px-2.5 py-0.5 rounded text-xs font-semibold bg-brand/10 text-brand">
-                {order.status}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => window.print()}
-              className="px-3 py-1.5 bg-white border border-black/10 rounded text-xs font-semibold text-ink hover:bg-gray-50 flex items-center gap-1.5 shadow-sm"
-            >
-              <Printer className="w-3.5 h-3.5 text-steel" /> Print Summary
-            </button>
-            <button
-              onClick={async () => {
-                try {
-                  await orderService.downloadInvoicePdf(order._id || order.orderNumber, `INV-${order.orderNumber}.pdf`);
-                } catch {
-                  window.location.href = "/invoices";
-                }
-              }}
-              className="px-3.5 py-1.5 bg-brand text-white rounded text-xs font-semibold hover:bg-brand-dark flex items-center gap-1.5 shadow-sm"
-            >
-              <FileText className="w-3.5 h-3.5" /> Download PDF Invoice
-            </button>
-          </div>
+      <div className="bg-slate-50 border-b border-slate-200/80 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <Breadcrumb
+            items={[
+              { label: "Customer Portal", href: "/profile" },
+              { label: "Orders", href: "/orders" },
+              { label: `#${order.orderNumber}` },
+            ]}
+          />
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {/* Tracking & Timeline Card */}
-        <section className="bg-white border border-black/10 rounded-xl p-6 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-black/10">
-            <div>
-              <p className="text-[11px] font-bold text-steel uppercase tracking-wider">
-                Consignment Logistics Status
-              </p>
-              <p className="text-sm font-semibold text-ink mt-0.5">
-                Carrier: {order.dispatchDetails?.carrier}
-              </p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+        {/* Header Bar */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-extrabold font-mono text-dark">
+                Order #{order.orderNumber}
+              </h1>
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{order.status || "Confirmed"}</span>
+              </span>
             </div>
-            <div className="flex items-center gap-6 text-xs">
-              <div>
-                <span className="text-steel block">LR / Docket No:</span>
-                <span className="font-mono font-bold text-ink">{order.dispatchDetails?.lrNumber}</span>
-              </div>
-              <div>
-                <span className="text-steel block">Estimated Delivery:</span>
-                <span className="font-bold text-green-700">{order.dispatchDetails?.estimatedDelivery}</span>
-              </div>
-            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Placed on{" "}
+              {new Date(order.date || order.createdAt || Date.now()).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}{" "}
+              &bull; 18% Statutory GST Cleared
+            </p>
           </div>
 
-          {/* Stepper */}
-          <div className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-              {timelineSteps.map((step, idx) => {
-                const isDone = step.status === "completed";
-                const isCurrent = step.status === "current";
-                return (
-                  <div
-                    key={idx}
-                    className={`p-3 rounded-lg border text-center transition-all ${
-                      isDone
-                        ? "bg-green-50/60 border-green-200"
-                        : isCurrent
-                        ? "bg-amber-50 border-amber-300 ring-2 ring-amber-400/20"
-                        : "bg-paper/40 border-black/5 opacity-60"
-                    }`}
-                  >
-                    <div className="flex justify-center mb-1.5">
-                      {isDone ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      ) : isCurrent ? (
-                        <Clock className="w-5 h-5 text-amber-600 animate-pulse" />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-steel/40" />
-                      )}
-                    </div>
-                    <p className="text-xs font-semibold text-ink leading-tight">{step.label}</p>
-                    <p className="text-[10px] text-steel mt-1">{step.date}</p>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="flex items-center gap-3">
+            <Link to="/invoices">
+              <Button variant="outline" size="sm" leftIcon={<FileText className="w-3.5 h-3.5 text-primary-700" />}>
+                Tax Invoice PDF
+              </Button>
+            </Link>
+            <button
+              onClick={() => window.print()}
+              className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 transition-colors"
+              title="Print Receipt"
+            >
+              <Printer className="w-4 h-4" />
+            </button>
           </div>
-        </section>
+        </div>
 
-        {/* 2-Column Content: Equipment Line Items + Shipping/Billing */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            {/* Products Table */}
-            <div className="bg-white border border-black/10 rounded-xl overflow-hidden shadow-sm">
-              <div className="p-4 bg-paper/50 border-b border-black/10 flex items-center justify-between">
-                <h2 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
-                  <Package className="w-4 h-4 text-brand" /> Certified Equipment Manifest
-                </h2>
-                <span className="text-xs text-steel font-mono">{order.items.length} Line Items</span>
+        {/* Timeline Progression */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-card space-y-4">
+          <h3 className="font-display font-extrabold text-sm uppercase tracking-wider text-slate-500">
+            Fulfillment &amp; Dispatch Timeline
+          </h3>
+
+          <div className="grid sm:grid-cols-5 gap-4 pt-2">
+            {timelineSteps.map((step, idx) => (
+              <div key={idx} className="relative flex flex-col items-center text-center p-3 rounded-xl bg-slate-50/70 border border-slate-200">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 font-bold text-xs ${
+                    step.status === "completed"
+                      ? "bg-emerald-600 text-white"
+                      : step.status === "current"
+                      ? "bg-primary-700 text-white"
+                      : "bg-slate-200 text-slate-500"
+                  }`}
+                >
+                  {idx + 1}
+                </div>
+                <p className="text-xs font-bold text-dark">{step.label}</p>
+                <span className="text-[10px] text-slate-400 mt-1">{step.date}</span>
               </div>
+            ))}
+          </div>
 
-              <div className="divide-y divide-black/5 text-sm">
-                {order.items.map((item: any, idx: number) => (
-                  <div key={idx} className="p-4 flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="font-semibold text-ink text-sm leading-snug">{item.name}</h3>
-                      <div className="flex items-center gap-3 text-xs text-steel mt-1 font-mono">
-                        {item.sku && <span>SKU: {item.sku}</span>}
-                        {item.hsn && <span>HSN: {item.hsn}</span>}
-                        <span>Qty: {item.quantity}</span>
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-bold text-ink text-sm">
-                        ₹{(item.price * item.quantity).toLocaleString("en-IN")}
-                      </p>
-                      <span className="text-[11px] text-steel">₹{item.price.toLocaleString("en-IN")} each</span>
-                    </div>
+          {order.dispatchDetails && (
+            <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 grid sm:grid-cols-3 gap-4 text-xs">
+              <div>
+                <span className="text-slate-400 block font-semibold">Carrier / Transporter</span>
+                <span className="font-bold text-dark">{order.dispatchDetails.carrier}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-semibold">Lorry Receipt (LR) #</span>
+                <span className="font-mono font-bold text-dark">{order.dispatchDetails.lrNumber || "LR-MH-449102"}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-semibold">Estimated Delivery</span>
+                <span className="font-bold text-emerald-700">{order.dispatchDetails.estimatedDelivery}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Items and Delivery Grid */}
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
+          {/* Items Table */}
+          <div className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-4">
+            <h3 className="font-display font-extrabold text-sm uppercase tracking-wider text-slate-500 pb-3 border-b border-slate-100">
+              Dispatched Line Items
+            </h3>
+
+            <div className="divide-y divide-slate-100">
+              {order.items?.map((item: any, i: number) => (
+                <div key={i} className="py-3 flex items-center justify-between gap-4 text-xs">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-dark truncate text-sm">{item.name}</p>
+                    <p className="text-slate-400 text-[11px] mt-0.5">
+                      HSN: 84241000 &bull; Quantity: {item.quantity} units
+                    </p>
                   </div>
-                ))}
-              </div>
-
-              {/* Price Calculation Summary */}
-              <div className="p-4 bg-paper/30 border-t border-black/10 space-y-2 text-xs">
-                <div className="flex justify-between text-steel">
-                  <span>Taxable Value (Excl. GST):</span>
-                  <span className="font-mono text-ink">₹{order.pricing.subtotal.toLocaleString("en-IN")}</span>
-                </div>
-                <div className="flex justify-between text-steel">
-                  <span>18% Goods & Services Tax (CGST 9% + SGST 9%):</span>
-                  <span className="font-mono text-ink">₹{order.pricing.gstAmount.toLocaleString("en-IN")}</span>
-                </div>
-                <div className="flex justify-between text-steel">
-                  <span>Secured Cargo Handling & Freight:</span>
-                  <span className="text-green-700 font-semibold">
-                    {order.pricing.shippingFee === 0 ? "FREE" : `₹${order.pricing.shippingFee}`}
+                  <span className="font-bold text-dark font-display text-sm shrink-0">
+                    ₹{((item.price || 0) * (item.quantity || 1)).toLocaleString("en-IN")}
                   </span>
                 </div>
-                <div className="pt-2 border-t border-black/10 flex justify-between text-sm font-bold text-ink">
-                  <span>Grand Total (Paid):</span>
-                  <span className="text-brand font-mono text-base">
-                    ₹{order.pricing.grandTotal.toLocaleString("en-IN")}
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
 
-            {/* Quality & Form B Compliance Note */}
-            <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-4 text-xs text-amber-950 flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <div>
-                <strong className="block font-bold">Statutory Certification Guarantee</strong>
-                All supplied fire equipment includes manufacturer factory test certificates, hydrostatic test
-                dates stamped on the cylinder dome (IS 15683), and QR barcode maintenance tags pre-registered
-                for Maharashtra Fire Prevention Act compliance audits.
+            <div className="pt-4 border-t border-slate-200 space-y-2 text-xs">
+              <div className="flex justify-between text-slate-600">
+                <span>Subtotal</span>
+                <span className="font-bold text-dark">₹{(order.pricing?.subtotal || 0).toLocaleString("en-IN")}</span>
               </div>
-            </div>
-          </div>
-
-          {/* Right Column: Consignee & Support */}
-          <div className="space-y-6">
-            <div className="bg-white border border-black/10 rounded-xl p-5 shadow-sm space-y-4">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-steel flex items-center gap-1.5 pb-2 border-b border-black/10">
-                <Building className="w-4 h-4 text-steel" /> Delivery Premises & GSTIN
-              </h2>
-
-              <div className="text-xs space-y-1">
-                {order.shippingAddress.companyName && (
-                  <p className="font-bold text-ink text-sm">{order.shippingAddress.companyName}</p>
-                )}
-                <p className="text-ink font-medium">{order.shippingAddress.fullName}</p>
-                <p className="text-steel">{order.shippingAddress.street}</p>
-                <p className="text-steel">
-                  {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}
-                </p>
-                <p className="text-steel pt-1">Phone: {order.shippingAddress.phone}</p>
-                {order.shippingAddress.gstin && (
-                  <div className="mt-2 pt-2 border-t border-black/5">
-                    <span className="text-steel block text-[10px]">Client GSTIN:</span>
-                    <span className="font-mono font-bold text-ink">{order.shippingAddress.gstin}</span>
-                  </div>
-                )}
+              <div className="flex justify-between text-slate-600">
+                <span>GST (18% Statutory)</span>
+                <span className="font-bold text-dark">₹{(order.pricing?.gstAmount || 0).toLocaleString("en-IN")}</span>
               </div>
-            </div>
-
-            <div className="bg-white border border-black/10 rounded-xl p-5 shadow-sm space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-steel">Payment Confirmation</h2>
-              <div className="text-xs">
-                <p className="text-steel">Method:</p>
-                <p className="font-semibold text-ink mt-0.5">{order.paymentMethod}</p>
-                <span className="inline-block mt-2 px-2 py-0.5 rounded bg-green-100 text-green-800 font-bold text-[10px]">
-                  Payment Verified
+              <div className="flex justify-between text-slate-600">
+                <span>Logistics &amp; Transport</span>
+                <span className="font-bold text-dark">
+                  {order.pricing?.shippingFee ? `₹${order.pricing.shippingFee}` : "FREE"}
                 </span>
               </div>
+              <div className="pt-3 border-t border-slate-200 flex justify-between text-base font-extrabold text-dark font-display">
+                <span>Total Amount Paid</span>
+                <span className="text-primary-700">₹{(order.pricing?.grandTotal || 0).toLocaleString("en-IN")}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Delivery Particulars */}
+          <div className="lg:col-span-4 space-y-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-4 text-xs">
+              <h3 className="font-display font-extrabold text-sm uppercase tracking-wider text-slate-500 pb-3 border-b border-slate-100">
+                Premise Site Location
+              </h3>
+
+              <div className="space-y-1 text-slate-700">
+                <p className="font-bold text-dark text-sm">
+                  {order.shippingAddress?.fullName || order.customer?.name}
+                </p>
+                {order.customer?.companyName && (
+                  <p className="text-primary-700 font-semibold">{order.customer.companyName}</p>
+                )}
+                <p className="text-slate-600 leading-relaxed pt-1">
+                  {order.shippingAddress?.street || order.shippingAddress?.line1}
+                  {order.shippingAddress?.line2 && `, ${order.shippingAddress?.line2}`}
+                  <br />
+                  {order.shippingAddress?.city}, {order.shippingAddress?.state} -{" "}
+                  {order.shippingAddress?.pincode}
+                </p>
+                <p className="text-slate-500 pt-1 font-mono">
+                  Site Contact: {order.shippingAddress?.phone || order.customer?.phone}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold mb-1">
+                  Payment Method
+                </span>
+                <span className="font-bold text-dark uppercase">{order.paymentMethod || "Direct NetBanking"}</span>
+              </div>
             </div>
 
-            <div className="bg-ink text-white rounded-xl p-5 shadow-sm space-y-3">
-              <div className="flex items-center gap-2 text-amber font-display font-bold text-sm">
-                <Phone className="w-4 h-4" /> Need Immediate Dispatch Help?
-              </div>
-              <p className="text-xs text-white/70 leading-relaxed">
-                Connect with our Navi Mumbai dispatch yard for urgent gate pass approvals, heavy vehicle logistics,
-                or technician installation coordination.
-              </p>
-              <a
-                href="tel:+919800000000"
-                className="block text-center py-2 bg-brand hover:bg-brand-dark text-white rounded text-xs font-bold transition-colors"
-              >
-                Call Dispatch Desk: +91 98000 00000
-              </a>
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-3 text-xs text-slate-600">
+              <Phone className="w-4 h-4 text-primary-700 shrink-0" />
+              <span>
+                Dispatch inquiries: <strong>+91 98000 00000</strong>
+              </span>
             </div>
           </div>
         </div>

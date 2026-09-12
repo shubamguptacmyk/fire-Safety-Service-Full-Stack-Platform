@@ -6,6 +6,13 @@ import { useAuthStore } from "@/store/authStore";
 import { productService } from "@/services/productService";
 import { quoteService } from "@/services/quoteService";
 import Seo from "@/components/Seo";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Badge from "@/components/Badge";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Textarea from "@/components/ui/Textarea";
+import TrustBadge from "@/components/ui/TrustBadge";
 import {
   FileSpreadsheet,
   Building2,
@@ -20,6 +27,7 @@ import {
   Trash2,
   PackagePlus,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Product } from "@/types";
 
@@ -70,7 +78,7 @@ export default function RequestQuote() {
       const p = allProducts.find((prod) => prod._id === line.productId);
       return {
         productId: line.productId,
-        name: p?.name || "Fire Equipment",
+        name: p?.name || "Fire Safety Equipment",
         SKU: p?.SKU,
         price: p ? p.discountPrice || p.price : 0,
         quantity: line.quantity,
@@ -141,7 +149,7 @@ export default function RequestQuote() {
         name: customerName,
         companyName,
         phone,
-        email: email || `${phone}@customer.akfiresafety.com`,
+        email: email || `${phone}@customer.shubamfire.in`,
         gstNumber: gstNumber || undefined,
         address: { line1: address },
         requirements,
@@ -157,9 +165,13 @@ export default function RequestQuote() {
 
       // Keep backup in localStorage
       try {
-        const savedQuotes = JSON.parse(localStorage.getItem("ak_customer_quotes") || "[]");
+        const savedQuotes = JSON.parse(
+          localStorage.getItem("shubam_customer_quotes") ||
+            localStorage.getItem("ak_customer_quotes") ||
+            "[]"
+        );
         savedQuotes.unshift(quote);
-        localStorage.setItem("ak_customer_quotes", JSON.stringify(savedQuotes));
+        localStorage.setItem("shubam_customer_quotes", JSON.stringify(savedQuotes));
       } catch {
         /* ignore */
       }
@@ -176,284 +188,312 @@ export default function RequestQuote() {
   return (
     <>
       <Seo
-        title="Request Official B2B Fire Safety Quotation — AK Fire Safety"
-        description="Formal commercial quotation for corporate offices, factories, societies, and institutions in Navi Mumbai and Maharashtra."
+        title="Request Official B2B Fire Safety Quotation — Shubam Fire Protection"
+        description="Formal commercial quotation for corporate offices, factories, housing societies, and institutions in Navi Mumbai and Maharashtra."
       />
 
-      <div className="bg-paper border-b border-black/10 py-6">
-        <div className="max-w-6xl mx-auto px-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-brand font-mono">
-            Commercial & Institutional Procurement
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-ink mt-0.5">
-            Request Official B2B Quotation (RFQ)
-          </h1>
-          <p className="text-xs sm:text-sm text-steel mt-1">
-            Receive a formal GST quotation with volume discount terms, 30-day price lock, and delivery timeline.
-          </p>
+      <div className="bg-slate-900 text-white py-8 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumb
+            items={[
+              { label: "B2B Quotations", href: "/quotes" },
+              { label: "Request RFQ" },
+            ]}
+            className="mb-4 text-slate-400 [&_a]:text-slate-400 hover:[&_a]:text-white"
+          />
+
+          <div className="max-w-3xl">
+            <span className="text-xs font-bold uppercase tracking-wider text-primary-400 font-mono">
+              Commercial & Institutional Procurement
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-white mt-1">
+              Request Official B2B Quotation (RFQ)
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1">
+              Receive a formal GST quotation with volume discount terms, 30-day price lock, and delivery timeline.
+            </p>
+          </div>
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <TrustBadge />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {errorMsg && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">
-            {errorMsg}
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-2xl flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmitQuote} className="grid lg:grid-cols-3 gap-8">
+        <form onSubmit={handleSubmitQuote} className="grid lg:grid-cols-3 gap-8 items-start">
           {/* Left 2 Cols: Form */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white border border-black/10 rounded-xl p-6 shadow-sm space-y-4">
-              <h2 className="font-bold text-base text-ink flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-brand" /> Company & Project Contact
-              </h2>
+          <div className="lg:col-span-2 space-y-8">
+            {/* 1. Company & Contact Details */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+              <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
+                <div className="w-8 h-8 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center">
+                  <Building2 className="w-4 h-4" />
+                </div>
+                <h2 className="font-bold text-lg text-slate-900 font-display">
+                  Company & Project Contact Information
+                </h2>
+              </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">
-                    Company / Organization Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="e.g. Reliance Corporate Park / Lodha Society"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">
-                    Representative Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="e.g. Rajesh Patil (Facility Manager)"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">
-                    Direct Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="9876543210"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Corporate Email</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="procurement@company.com"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">Company GSTIN</label>
-                  <input
-                    type="text"
-                    value={gstNumber}
-                    onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
-                    placeholder="27AAAAA0000A1Z5"
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs uppercase focus:border-brand outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-ink/80 mb-1">
-                  Facility / Installation Site Address
-                </label>
-                <input
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="MIDC Turbhe / Sector 15, Belapur, Navi Mumbai"
-                  className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none"
+                <Input
+                  label="Company / Organization Legal Entity *"
+                  required
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="e.g. Reliable Logistics Hub Pvt Ltd"
+                />
+                <Input
+                  label="Representative / Officer Name *"
+                  required
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="e.g. Rajesh Patil (Facility Head)"
                 />
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">
-                    Target Installation / Supply Date
-                  </label>
-                  <input
-                    type="date"
-                    value={preferredDate}
-                    onChange={(e) => setPreferredDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink/80 mb-1">
-                    Specific Requirements / Compliance Remarks
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={requirements}
-                    onChange={(e) => setRequirements(e.target.value)}
-                    placeholder="e.g. Require half-yearly Form B certificate, wall brackets, and staff training demo..."
-                    className="w-full px-3 py-1.5 border border-black/20 rounded text-xs focus:border-brand outline-none"
-                  />
-                </div>
+              <div className="grid sm:grid-cols-3 gap-4">
+                <Input
+                  label="Direct Phone Number *"
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="98XXXXXXXX"
+                />
+                <Input
+                  label="Official Email Address"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="facility@company.com"
+                />
+                <Input
+                  label="GSTIN Number (for ITC credit)"
+                  value={gstNumber}
+                  onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
+                  placeholder="27AAAAA0000A1Z5"
+                />
               </div>
+
+              <Input
+                label="Site Delivery / Project Location Address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Plot No., Industrial Area / Sector, City"
+              />
             </div>
 
-            {/* Product Selector Builder */}
-            <div className="bg-white border border-black/10 rounded-xl p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-black/10">
-                <h3 className="font-bold text-sm text-ink flex items-center gap-2">
-                  <PackagePlus className="w-4 h-4 text-brand" /> Add Equipment to Quotation Tray
-                </h3>
-                <span className="text-xs text-steel">Select from our certified catalog</span>
+            {/* 2. Items & Equipment List */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center">
+                    <PackagePlus className="w-4 h-4" />
+                  </div>
+                  <h2 className="font-bold text-lg text-slate-900 font-display">
+                    Equipment Scope & Quantities
+                  </h2>
+                </div>
+                <span className="text-xs font-bold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-full">
+                  {quoteProducts.length} Items Selected
+                </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
-                <select
-                  value={selectedCatalogId}
-                  onChange={(e) => setSelectedCatalogId(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none bg-white truncate"
-                >
-                  <option value="">-- Choose Fire Safety Equipment / Extinguisher --</option>
-                  {allProducts.map((p) => (
-                    <option key={p._id} value={p._id}>
-                      {p.name} ({p.SKU || p.brand}) — ₹{(p.discountPrice || p.price).toLocaleString("en-IN")}
-                    </option>
-                  ))}
-                </select>
+              {/* Add item selector */}
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
+                  Add From Certified Product Catalog
+                </span>
+                <div className="grid sm:grid-cols-4 gap-3">
+                  <div className="sm:col-span-2">
+                    <select
+                      value={selectedCatalogId}
+                      onChange={(e) => setSelectedCatalogId(e.target.value)}
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:border-primary-600 outline-none"
+                    >
+                      <option value="">Select Equipment...</option>
+                      {allProducts.map((p) => (
+                        <option key={p._id} value={p._id}>
+                          {p.name} (₹{p.discountPrice || p.price})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={1}
-                    value={addQty}
-                    onChange={(e) => setAddQty(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-20 px-3 py-2 border border-black/20 rounded text-xs focus:border-brand outline-none text-center"
-                    placeholder="Qty"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddProductToQuote}
-                    disabled={!selectedCatalogId}
-                    className="px-4 py-2 bg-ink hover:bg-black disabled:opacity-40 text-white rounded text-xs font-bold flex items-center gap-1.5 shrink-0 transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add
-                  </button>
+                  <div>
+                    <input
+                      type="number"
+                      min={1}
+                      value={addQty}
+                      onChange={(e) => setAddQty(Number(e.target.value))}
+                      placeholder="Qty"
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:border-primary-600 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      className="w-full"
+                      onClick={handleAddProductToQuote}
+                      disabled={!selectedCatalogId}
+                    >
+                      <Plus className="w-4 h-4 mr-1" /> Add
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Right Col: Quote Items & Summary */}
-          <div className="space-y-4">
-            <div className="bg-white border border-black/10 rounded-xl p-5 shadow-sm space-y-4">
-              <h3 className="font-display font-bold text-base text-ink pb-3 border-b border-black/10 flex items-center justify-between">
-                <span>Selected Equipment</span>
-                <span className="text-xs text-steel font-normal">({quoteProducts.length} items)</span>
-              </h3>
-
+              {/* Current Items List */}
               {quoteProducts.length === 0 ? (
-                <div className="py-8 text-center text-xs text-steel space-y-2">
-                  <FileSpreadsheet className="w-8 h-8 text-steel/40 mx-auto" />
-                  <p>No equipment currently added to quotation tray.</p>
-                  <p className="text-brand font-semibold">
-                    Use the product selector on the left or browse our catalog.
-                  </p>
+                <div className="py-8 text-center text-slate-400 text-xs">
+                  No items added yet. Choose equipment from catalog above or add items from our product pages.
                 </div>
               ) : (
-                <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                  {quoteProducts.map((p) => (
+                <div className="space-y-3">
+                  {quoteProducts.map((item, idx) => (
                     <div
-                      key={p.productId}
-                      className="flex justify-between items-start text-xs py-2 border-b border-black/5 gap-2"
+                      key={idx}
+                      className="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-100 text-xs sm:text-sm"
                     >
-                      <div className="truncate flex-1">
-                        <p className="font-semibold text-ink truncate">{p.name}</p>
-                        <div className="flex items-center gap-2 mt-1 text-[11px] text-steel">
-                          <span>Qty: {p.quantity}</span>
-                          <span>•</span>
-                          <span>₹{p.price.toLocaleString("en-IN")} each</span>
-                        </div>
+                      <div className="space-y-0.5 max-w-[60%]">
+                        <strong className="text-slate-900 block font-semibold leading-snug">
+                          {item.name}
+                        </strong>
+                        {item.SKU && (
+                          <span className="text-[11px] font-mono text-slate-500 block">
+                            SKU: {item.SKU}
+                          </span>
+                        )}
+                        <span className="text-xs text-slate-500 font-mono">
+                          ₹{item.price.toLocaleString("en-IN")} each
+                        </span>
                       </div>
 
-                      <div className="text-right shrink-0">
-                        <span className="font-bold text-ink block">
-                          ₹{(p.price * p.quantity).toLocaleString("en-IN")}
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-slate-500">Qty:</span>
+                          <input
+                            type="number"
+                            min={1}
+                            value={item.quantity}
+                            onChange={(e) =>
+                              handleUpdateQuantity(item.productId, Number(e.target.value))
+                            }
+                            className="w-14 px-2 py-1 text-xs text-center bg-white border border-slate-200 rounded-lg focus:border-primary-600 outline-none"
+                          />
+                        </div>
+
+                        <span className="font-mono font-bold text-slate-900 w-24 text-right">
+                          ₹{(item.price * item.quantity).toLocaleString("en-IN")}
                         </span>
-                        {customItems.some((c) => c.productId === p.productId) && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveCustomItem(p.productId)}
-                            className="text-[10px] text-red-600 hover:underline mt-0.5 inline-flex items-center gap-0.5"
-                          >
-                            <Trash2 className="w-3 h-3" /> Remove
-                          </button>
-                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCustomItem(item.productId)}
+                          className="p-1.5 text-slate-400 hover:text-primary-600 transition-colors"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
+            </div>
 
-              <div className="space-y-2 text-xs pt-3 border-t border-black/10">
-                <div className="flex justify-between text-steel">
-                  <span>Base Equipment Value</span>
-                  <span className="text-ink font-medium">₹{subtotal.toLocaleString("en-IN")}</span>
+            {/* 3. Preferred Date & Specific Requirements */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
+              <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
+                <div className="w-8 h-8 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center">
+                  <Calendar className="w-4 h-4" />
                 </div>
-                <div className="flex justify-between text-steel">
-                  <span>Estimated GST (18%)</span>
-                  <span className="text-ink font-medium">₹{gst.toLocaleString("en-IN")}</span>
+                <h2 className="font-bold text-lg text-slate-900 font-display">
+                  Project Timeline & Custom Requirements
+                </h2>
+              </div>
+
+              <Input
+                label="Target Commissioning / Delivery Date"
+                type="date"
+                value={preferredDate}
+                onChange={(e) => setPreferredDate(e.target.value)}
+              />
+
+              <Textarea
+                label="Custom Engineering Requirements / Tender Specifications"
+                rows={3}
+                value={requirements}
+                onChange={(e) => setRequirements(e.target.value)}
+                placeholder="Mention specific testing requirements (e.g., 35-bar hydro test certificates, Form B readiness, brand preferences, delivery schedule)..."
+              />
+            </div>
+          </div>
+
+          {/* Right Col: Quote Summary Card */}
+          <div className="space-y-6">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6 sticky top-24">
+              <div className="pb-4 border-b border-slate-100">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary-600">
+                  Commercial Proposal
+                </span>
+                <h3 className="font-display font-bold text-xl text-slate-900 mt-0.5">
+                  Quotation Estimate
+                </h3>
+              </div>
+
+              <div className="space-y-3 text-xs sm:text-sm text-slate-600">
+                <div className="flex justify-between">
+                  <span>Scope Items:</span>
+                  <span className="font-semibold text-slate-900">{quoteProducts.length} Items</span>
                 </div>
-                <div className="pt-3 border-t border-black/10 flex justify-between items-baseline">
-                  <div>
-                    <span className="text-sm font-bold text-ink">Estimated Quote Value</span>
-                    <p className="text-[10px] text-steel">Subject to volume discounting</p>
-                  </div>
-                  <span className="text-xl font-bold text-ink font-display">
+                <div className="flex justify-between">
+                  <span>Estimated Subtotal:</span>
+                  <span className="font-mono font-semibold text-slate-900">
+                    ₹{subtotal.toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Estimated GST (18%):</span>
+                  <span className="font-mono font-semibold text-slate-900">
+                    ₹{gst.toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="flex justify-between text-base font-bold text-slate-900 pt-3 border-t border-slate-200">
+                  <span>Estimated Total:</span>
+                  <span className="font-mono text-primary-700">
                     ₹{estimatedTotal.toLocaleString("en-IN")}
                   </span>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={isSubmitting || quoteProducts.length === 0}
-                className="w-full py-3.5 bg-brand hover:bg-brand-dark disabled:opacity-50 text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 shadow-md transition-colors"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Generating Official RFQ...
-                  </>
-                ) : (
-                  <>
-                    <FileSpreadsheet className="w-4 h-4 text-amber" /> Generate Official B2B Quote
-                  </>
-                )}
-              </button>
-
-              <div className="p-3 bg-paper rounded border border-black/10 text-[11px] text-steel space-y-1">
-                <p className="flex items-center gap-1.5 text-ink font-semibold">
-                  <ShieldCheck className="w-3.5 h-3.5 text-brand" /> Formal Quotation Guarantee:
-                </p>
-                <p>• Prices locked for 30 calendar days</p>
-                <p>• GST tax invoice provided with input credit eligibility</p>
-                <p>• Dedicated technical sales representative assigned within 2 hours</p>
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2 text-xs text-slate-600">
+                <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-primary-600" /> B2B Price Lock Guarantee
+                </span>
+                <p>• Locked 30-day fixed pricing upon proposal generation.</p>
+                <p>• 100% eligible for Input Tax Credit (ITC) with valid GSTIN.</p>
+                <p>• Free technical delivery consultation across Mumbai MMR.</p>
               </div>
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="w-full"
+                isLoading={isSubmitting}
+                disabled={quoteProducts.length === 0}
+              >
+                Submit RFQ Proposal <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
             </div>
           </div>
         </form>

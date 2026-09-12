@@ -5,7 +5,10 @@ import { useWishlistStore } from "@/store/wishlistStore";
 import { useCartStore } from "@/store/cartStore";
 import { productService } from "@/services/productService";
 import Seo from "@/components/Seo";
-import { Heart, ShoppingCart, Trash2, ArrowRight, PackageOpen } from "lucide-react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import EmptyState from "@/components/ui/EmptyState";
+import Button from "@/components/ui/Button";
+import { Heart, ShoppingCart, Trash2, ArrowRight, FileSpreadsheet } from "lucide-react";
 
 export default function Wishlist() {
   const { itemIds, removeItem, clear, syncWithServer } = useWishlistStore();
@@ -15,7 +18,7 @@ export default function Wishlist() {
     syncWithServer();
   }, [syncWithServer]);
 
-  const { data: allProducts = [], isLoading } = useQuery({
+  const { data: allProducts = [] } = useQuery({
     queryKey: ["wishlist-products", itemIds.join(",")],
     queryFn: async () => {
       if (itemIds.length === 0) return [];
@@ -34,46 +37,54 @@ export default function Wishlist() {
   return (
     <>
       <Seo
-        title="My Wishlist — AK Fire Safety Service"
-        description="Saved fire safety equipment, extinguishers, and suppression systems for later review."
+        title="Saved Equipment &amp; Wishlist — Shubam Fire Protection"
+        description="Review saved fire safety equipment, extinguishers, and suppression systems saved for your facility."
       />
 
-      <div className="bg-paper border-b border-black/10 py-6">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
+      <div className="bg-slate-50 border-b border-slate-200/80 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <Breadcrumb items={[{ label: "Saved Equipment" }]} />
+        </div>
+      </div>
+
+      <div className="bg-white border-b border-slate-200 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-display font-bold text-ink">My Wishlist</h1>
-            <p className="text-xs text-steel mt-0.5">
-              {itemIds.length} item(s) saved for upcoming facility inspections or upgrades
+            <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-dark">
+              Saved Equipment &amp; Wishlist
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              {itemIds.length} item(s) saved for upcoming facility inspections, procurement, or upgrades
             </p>
           </div>
           {itemIds.length > 0 && (
             <button
               onClick={clear}
-              className="text-xs text-steel hover:text-red-600 transition-colors"
+              className="text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1"
             >
-              Clear Wishlist
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear Wishlist</span>
             </button>
           )}
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         {wishlistProducts.length === 0 ? (
-          <div className="p-16 bg-white border border-black/10 rounded-xl text-center max-w-md mx-auto">
-            <PackageOpen className="w-12 h-12 text-steel/50 mx-auto mb-3" />
-            <h2 className="font-display font-semibold text-lg text-ink">Your Wishlist is Empty</h2>
-            <p className="text-steel text-xs sm:text-sm mt-1">
-              Save equipment you are considering for your building, office, or factory.
-            </p>
-            <Link
-              to="/products"
-              className="mt-5 inline-flex items-center gap-1.5 px-4 py-2 bg-brand text-white text-xs font-semibold rounded hover:bg-brand-dark transition-colors"
-            >
-              Browse Equipment Catalog <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+          <EmptyState
+            icon={<Heart className="w-10 h-10 text-slate-400" />}
+            title="Your Wishlist is Empty"
+            description="You haven't saved any fire protection gear yet. Browse our catalog to bookmark equipment for your facility."
+            action={
+              <Link to="/products">
+                <Button variant="primary" size="md" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                  Explore Equipment Catalog
+                </Button>
+              </Link>
+            }
+          />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {wishlistProducts.map((p) => {
               const img =
                 p.images?.find((i) => i.isPrimary)?.url ||
@@ -83,40 +94,66 @@ export default function Wishlist() {
               return (
                 <div
                   key={p._id}
-                  className="bg-white border border-black/10 rounded-lg overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow"
+                  className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col justify-between shadow-card hover:shadow-hover hover:border-slate-300 transition-all group"
                 >
-                  <div className="relative aspect-square bg-paper p-4 flex items-center justify-center">
-                    <img src={img} alt={p.name} className="w-full h-full object-contain" />
+                  <div className="relative aspect-square bg-slate-50 p-6 flex items-center justify-center border-b border-slate-100">
+                    <img
+                      src={img}
+                      alt={p.name}
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                    />
                     <button
                       onClick={() => removeItem(p._id)}
-                      className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white text-steel hover:text-red-600 rounded-full shadow-sm"
+                      className="absolute top-3 right-3 p-2 bg-white/90 hover:bg-white text-slate-400 hover:text-red-600 rounded-full shadow-2xs transition-colors"
                       aria-label="Remove from wishlist"
+                      title="Remove from wishlist"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <div className="p-4 flex-1 flex flex-col justify-between">
+                  <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-brand uppercase">{p.brand}</span>
+                      <span className="text-[10px] font-bold text-primary-700 uppercase tracking-wider">
+                        {p.brand} &bull; SKU: {p.SKU}
+                      </span>
                       <Link
                         to={`/product/${p.slug}`}
-                        className="block font-semibold text-sm text-ink hover:text-brand line-clamp-2 mt-0.5"
+                        className="block font-bold text-sm text-dark hover:text-primary-700 line-clamp-2 mt-1 transition-colors leading-snug"
                       >
                         {p.name}
                       </Link>
-                      <span className="text-sm font-bold text-ink block mt-2">
-                        ₹{(p.discountPrice || p.price).toLocaleString("en-IN")}
-                      </span>
+                      <div className="flex items-baseline gap-2 mt-2.5">
+                        <span className="text-base font-extrabold text-dark font-display">
+                          ₹{(p.discountPrice || p.price).toLocaleString("en-IN")}
+                        </span>
+                        {p.discountPrice && (
+                          <span className="text-xs text-slate-400 line-through">
+                            ₹{p.price.toLocaleString("en-IN")}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    <button
-                      onClick={() => handleMoveToCart(p._id)}
-                      disabled={p.stock <= 0}
-                      className="mt-4 w-full py-2 bg-brand hover:bg-brand-dark text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 disabled:bg-gray-200 disabled:text-gray-400 transition-colors"
-                    >
-                      <ShoppingCart className="w-3.5 h-3.5" /> Move to Cart
-                    </button>
+                    <div className="mt-5 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
+                      <Link
+                        to={`/request-quote?product=${encodeURIComponent(p.name)}&sku=${encodeURIComponent(p.SKU)}`}
+                        className="py-2 px-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-primary-700" />
+                        <span>Quote</span>
+                      </Link>
+
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleMoveToCart(p._id)}
+                        disabled={p.stock <= 0}
+                        leftIcon={<ShoppingCart className="w-3.5 h-3.5" />}
+                      >
+                        {p.stock <= 0 ? "Out of Stock" : "Move to Cart"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               );

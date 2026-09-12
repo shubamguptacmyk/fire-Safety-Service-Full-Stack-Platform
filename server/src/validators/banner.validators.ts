@@ -2,17 +2,27 @@ import { z } from "zod";
 
 export const createBannerSchema = z.object({
   title: z.string().min(2, "Banner title is required"),
-  subtitle: z.string().optional(),
+  subtitle: z.string().optional().nullable(),
   image: z.string().min(1, "Banner image URL is required"),
-  mobileImage: z.string().optional(),
-  link: z.string().optional(),
-  buttonText: z.string().default("Explore Now"),
-  position: z.enum(["home_hero", "home_middle", "home_secondary", "promo_strip", "category_top", "services_top", "deals"]).default("home_hero"),
-  sortOrder: z.number().int().optional().default(0),
-  order: z.number().int().optional(),
+  mobileImage: z.string().optional().nullable(),
+  link: z.string().optional().nullable(),
+  buttonText: z.string().default("Explore Now").optional(),
+  position: z
+    .enum([
+      "home_hero",
+      "home_secondary",
+      "home_middle",
+      "promo_strip",
+      "category_top",
+      "services_top",
+      "deals",
+    ])
+    .default("home_hero"),
+  sortOrder: z.coerce.number().int().optional(),
+  order: z.coerce.number().int().optional(),
+  startDate: z.string().optional().nullable(),
+  endDate: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
-  startDate: z.string().or(z.date()).optional(),
-  endDate: z.string().or(z.date()).optional(),
 });
 
 export const updateBannerSchema = createBannerSchema.partial();
